@@ -16,11 +16,11 @@ def compose(c)
   puts "Running case " + file_base + ":"
   puts "=================\n"
 
-  # Compose with params
+  # Compose with modelkit
   success = nil
   if !(FileUtils.uptodate?(target, src))
     puts "\ncomposing...\n\n"
-    success = system(%Q|params compose -f "#{c}" -o "#{output_dir + '/in.cse'}"  base.pxt|)
+    success = system(%Q|modelkit template-compose -f "#{c}" -o "#{output_dir + '/in.cse'}"  base.pxt|)
   else
     puts "  ...input already up-to-date."
     success = true

@@ -1,4 +1,6 @@
-# Standard 140 Building Thermal Envelope and Fabric Load Tests for CSE
+# Standard 140 Section 7 BESTEST Cases for CSE
+
+# Copied from [Standard 140 Building Thermal Envelope and Fabric Load Tests for CSE](https://github.com/cse-sim/std140-cse)
 
 ## Requirements
 
