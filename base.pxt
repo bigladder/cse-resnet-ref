@@ -231,8 +231,10 @@ width = 57.0 # East-to-West dimension in feet
 depth = 27.0 # North-to-South dimension in feet
 roof_pitch = 14.23 # Pitch length of angled roof from eave to peak in feet
 height_cond = 8.0 # Floor-to-Ceiling height of conditioned zone in feet
+height_attic = 4.5 # Ceiling-to-Roof height of unconditioned attic in feet
 floor_area = width*depth # Floor area for both conditioned and attic zones in square feet
 zone_vol_cond = floor_area*height_cond # Conditioned zone volume in cubic feet
+zone_vol_attic = 0.5*floor_area*height_attic # Unconditioned attic zone volume in cubic feet
 
 win_width = 3.0 # Window width
 win_height = 5.0 # Window height
@@ -504,6 +506,78 @@ window_area = 0.0
   <% end %>
 <% end %>
 
+// Zone
+ZONE "Attic Zone"
+  znModel = UZX
+  znArea = <%= floor_area %>
+  znVol = <%= zone_vol_attic %>
+  znCAir = 0.01 // taken from CBECC-Res
+  infAC = <%= ach_attic %>
+  znEaveZ = <%= height_cond %>
+<%
+# Surfaces in Unconditioned Attic Zone
+# Constructions for gable walls and roofs are continuous without framing
+surfaces_attic = [
+  {:name=>"East Attic Gable Wall",:type=>"Wall",:area=>0.5*depth*height_attic,:azm=>90,:windows=>0},
+  {:name=>"West Attic Gable Wall",:type=>"Wall",:area=>0.5*depth*height_attic,:azm=>270,:windows=>0},
+  {:name=>"North Roof",:type=>"Roof",:area=>roof_pitch*width,:azm=>0,:windows=>0},
+  {:name=>"South Roof",:type=>"Roof",:area=>roof_pitch*width,:azm=>180,:windows=>0}
+]
+%>
+<% for surface in surfaces_attic %>
+  SURFACE "<%= surface[:name] %>"
+  <% if surface[:type] == "Wall" %>
+    <% sym = :wall %>
+    sfType = Wall
+    sfCon = "Gable Wall"
+    sfAzm = <%= surface[:azm] %>
+  <% elsif surface[:type] == "Roof" %>
+    <% sym = :roof %>
+    sfType = Ceiling
+    sfCon = "Roof"
+  <% end %>
+    sfArea = <%= surface[:area] %>
+    sfExCnd = Ambient
+    sfModel = forward_difference
+    sfExAbs = <%= ext_sol_abs %>
+    sfInAbs = <%= int_sol_abs %>
+    sfExEpsLW = <%= ext_lw_abs %>
+    sfInEpsLW = <%= int_lw_abs %>
+    sfExRf = 1.67
+  <% if surface[:name] == "South Wall" and sunspace %>
+    <% if h_int %>
+      sfExHcModel = INPUT
+      sfExHcMult = <%= h_int[sym]*u_c %>
+    <% else %>
+      <% if tarp_conv %>
+        sfExHcModel = TARP
+      <% else %>
+        sfExHcModel = UNIFIED
+      <% end %>
+    <% end %>
+  <% else %>
+    <% if h_ext %>
+      sfExHcModel = INPUT
+      sfExHcMult = <%= h_ext[sym]*u_c %>
+    <% else %>
+      <% if tarp_conv %>
+        sfExHcModel = DOE2
+      <% else %>
+        sfExHcModel = UNIFIED
+      <% end %>
+    <% end %>
+  <% end %>
+  <% if h_int %>
+    sfInHcModel = INPUT
+    sfInHcMult = <%= h_int[sym]*u_c %>
+  <% else %>
+    <% if tarp_conv %>
+      sfInHcModel = TARP
+    <% else %>
+      sfInHcModel = UNIFIED
+    <% end %>
+  <% end %>
+<% end %>
 <% if sunspace %>
 ALTER ZONE "Main Zone"
   ALTER SURFACE "South Wall"
@@ -709,6 +783,17 @@ REPORT
   rpType = ZDD
   rpZone = "Main Zone"
 
+REPORTFILE "Attic Zone Data Dump"
+  rfFileName = "Attic ZDD.rep"
+  rfFileStat = OVERWRITE
+
+REPORT
+  rpReportfile = "Attic Zone Data Dump"
+  rpHeader = Yes
+  rpFooter = No
+  rpType = ZDD
+  rpZone = "Attic Zone"
+
 EXPORTFILE "Main Zone Statistics"
   xfFileName = "Main ZST.csv"
   xfFileStat = OVERWRITE
@@ -719,6 +804,20 @@ EXPORT
   exFooter = No
   exType = ZST
   exZone = "Main Zone"
+  exFreq = HOUR
+  exDayBeg = JAN 1
+  exDayEnd = DEC 31
+
+EXPORTFILE "Attic Zone Statistics"
+  xfFileName = "Attic ZST.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Attic Zone Statistics"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exType = ZST
+  exZone = "Attic Zone"
   exFreq = HOUR
   exDayBeg = JAN 1
   exDayEnd = DEC 31
