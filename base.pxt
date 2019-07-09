@@ -1,8 +1,8 @@
 <%#INTERFACE
   parameter "case_name"
   parameter "weather"
-  parameter "south_windows", :default=>2
-  parameter "east_west_windows", :default=>0
+  parameter "north_south_windows", :default=>6
+  parameter "east_west_windows", :default=>3
   parameter "overhangs", :default=>false
   parameter "fins", :default=>false
   parameter "construction_mass", :default=>"LOW" # LOW | LOW-EFF | HIGH
@@ -227,29 +227,33 @@ CONSTRUCTION "Common Wall"
 
 <%
 # Dimensions
-width = 8.0*m_ft
-depth = 6.0*m_ft
-height = 2.7*m_ft
-floor_area = width*depth
-zone_vol = floor_area*height
+width = 57.0 # East-to-West dimension in feet
+depth = 27.0 # North-to-South dimension in feet
+roof_pitch = 14.23 # Pitch length of angled roof from eave to peak in feet
+height_cond = 8.0 # Floor-to-Ceiling height of conditioned zone in feet
+floor_area = width*depth # Floor area for both conditioned and attic zones in square feet
+zone_vol_cond = floor_area*height_cond # Conditioned zone volume in cubic feet
 
-win_width = 3.0*m_ft
-win_height = 2.0*m_ft
+win_width = 3.0 # Window width
+win_height = 5.0 # Window height
+
+door_width = 3.0 # Door width
+door_height = (6.00 + (8.00 / 12.00) ) # Door height
 
 overhang_depth = 1.0*m_ft
 overhang_height = 0.5*m_ft
 
 ss_depth = 2.0*m_ft
 ss_area = ss_depth*width
-ss_vol = ss_area*height
+ss_vol = ss_area*height_cond
 %>
 
 // Zone
 ZONE "Main Zone"
   znModel = CZM
   znArea = <%= floor_area %>
-  znVol = <%= zone_vol %>
-  znCAir = <%= 0.24*0.077*zone_vol %>
+  znVol = <%= zone_vol_cond %>
+  znCAir = <%= 0.24*0.077*zone_vol_cond %>
 <% if !ff %>
   znTH = select( $hour == 8, <%= c_f(heat_sb) %> + ($subhour/<%= nsteps %>.0)*<%= c_f(heat_sp) - c_f(heat_sb) %> , $hour > 8 && $hour <= 23, <%= c_f(heat_sp) %>, default <%= c_f(heat_sb) %>)
   znQMxH = <%= 1000000*w_btu %>
@@ -259,47 +263,56 @@ ZONE "Main Zone"
   znHcAirX = 0.0 // Remove +4.8 ACH assumed for non-RSYS zones
   infAC = <%= ach %>
   znFloorZ = 0.0
-  znCeilingHt = <%= height %>
-  znEaveZ = <%= height %>
+  znCeilingHt = <%= height_cond %>
+  znEaveZ = <%= height_cond %>
 
   GAIN "Internal Gain"
     gnPower = <%= gain*w_btu %>
     gnFrRad = 0.6
 
 <%
-# Surfaces
-surfaces = [
-  {:name=>"North Wall",:type=>"Wall",:area=>width*height,:azm=>0,:windows=>0},
-  {:name=>"East Wall",:type=>"Wall",:area=>depth*height,:azm=>90,:windows=>east_west_windows},
-  {:name=>"South Wall",:type=>"Wall",:area=>width*height,:azm=>180,:windows=>south_windows},
-  {:name=>"West Wall",:type=>"Wall",:area=>depth*height,:azm=>270,:windows=>east_west_windows},
-  {:name=>"Roof",:type=>"Roof",:area=>floor_area,:windows=>0},
-  {:name=>"Floor",:type=>"Floor",:area=>floor_area,:windows=>0}
+# Surfaces in Conditioned Main Zone
+# Constructions for exterior walls, ceiling, and raised floor include wood framing
+surfaces_cond = [
+  {:name=>"North Wall",:type=>"Wall",:area=>width*height_cond,:azm=>0,:windows=>north_south_windows,:framing_factor=>1.75/16,:doors=>1},
+  {:name=>"East Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>90,:windows=>east_west_windows,:framing_factor=>1.75/16,:doors=>0},
+  {:name=>"South Wall",:type=>"Wall",:area=>width*height_cond,:azm=>180,:windows=>north_south_windows,:framing_factor=>1.75/16,:doors=>1},
+  {:name=>"West Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>270,:windows=>east_west_windows,:framing_factor=>1.75/16,:doors=>0},
+  {:name=>"Ceiling",:type=>"Ceiling",:area=>floor_area,:windows=>0,:framing_factor=>1.75/16,:doors=>0},
+  {:name=>"Floor",:type=>"Floor",:area=>floor_area,:windows=>0,:framing_factor=>1.75/24,:doors=>0}
 ]
 windows = []
 window_area = 0.0
 %>
 
-<% for surface in surfaces %>
-  SURFACE "<%= surface[:name] %>"
+<% for surface in surfaces_cond %>
+  SURFACE "<%= surface[:name] %>-Frm"
   <% if surface[:type] == "Wall" %>
     <% sym = :wall %>
     sfType = Wall
-    sfCon = "Exterior Wall"
+    sfCon = "Exterior Wall - Frame"
+    sfArea = <%= surface[:area]*surface[:framing_factor] %>
     sfAzm = <%= surface[:azm] %>
-  <% elsif surface[:type] == "Roof" %>
-    <% sym = :roof %>
+    sfExCnd = Ambient
+    sfExAbs = <%= ext_sol_abs %>
+  <% elsif surface[:type] == "Ceiling" %>
+    <% sym = :ceiling %>
     sfType = Ceiling
-    sfCon = "Roof"
+    sfCon = "Ceiling - Frame"
+    sfArea = <%= surface[:area]*surface[:framing_factor] %>
+    sfExCnd = ADJZN
+    sfAdjZn = "Attic Zone"
+    sfExAbs = <%= ext_sol_abs %>
   <% elsif surface[:type] == "Floor" %>
     <% sym = :floor %>
     sfType = Floor
-    sfCon = "Raised Floor"
+    sfCon = "Raised Floor - Frame"
+    sfArea = <%= surface[:area]*surface[:framing_factor] %>
+    sfExCnd = SPECIFIEDT
+    sfExAbs = 0               // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor shall receive no solar radiation
+    sfExT = @weather.db       // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor exposed to outside air temperature
   <% end %>
-    sfArea = <%= surface[:area] %>
-    sfExCnd = Ambient
     sfModel = forward_difference
-    sfExAbs = <%= ext_sol_abs %>
     sfInAbs = <%= int_sol_abs %>
     sfExEpsLW = <%= ext_lw_abs %>
     sfInEpsLW = <%= int_lw_abs %>
@@ -336,6 +349,86 @@ window_area = 0.0
     <% else %>
       sfInHcModel = UNIFIED
     <% end %>
+  <% end %>
+
+  SURFACE "<%= surface[:name] %>-Cav"
+  <% if surface[:type] == "Wall" %>
+    <% sym = :wall %>
+    sfType = Wall
+    sfCon = "Exterior Wall - Cavity"
+    sfArea = <%= surface[:area]*(1 - surface[:framing_factor]) %>
+    sfAzm = <%= surface[:azm] %>
+    sfExCnd = Ambient
+    sfExAbs = <%= ext_sol_abs %>
+  <% elsif surface[:type] == "Ceiling" %>
+    <% sym = :ceiling %>
+    sfType = Ceiling
+    sfCon = "Ceiling - Cavity"
+    sfArea = <%= surface[:area]*(1 - surface[:framing_factor]) %>
+    sfExCnd = ADJZN
+    sfAdjZn = "Attic Zone"
+    sfExAbs = <%= ext_sol_abs %>
+  <% elsif surface[:type] == "Floor" %>
+    <% sym = :floor %>
+    sfType = Floor
+    sfCon = "Raised Floor - Cavity"
+    sfArea = <%= surface[:area]*(1 - surface[:framing_factor]) %>
+    sfExCnd = SPECIFIEDT
+    sfExAbs = 0               // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor shall receive no solar radiation
+    sfExT = @weather.db       // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor exposed to outside air temperature
+  <% end %>
+    sfModel = forward_difference
+    sfInAbs = <%= int_sol_abs %>
+    sfExEpsLW = <%= ext_lw_abs %>
+    sfInEpsLW = <%= int_lw_abs %>
+    sfExRf = 1.67
+  <% if surface[:name] == "South Wall" and sunspace %>
+    <% if h_int %>
+      sfExHcModel = INPUT
+      sfExHcMult = <%= h_int[sym]*u_c %>
+    <% else %>
+      <% if tarp_conv %>
+        sfExHcModel = TARP
+      <% else %>
+        sfExHcModel = UNIFIED
+      <% end %>
+    <% end %>
+  <% else %>
+    <% if h_ext %>
+      sfExHcModel = INPUT
+      sfExHcMult = <%= h_ext[sym]*u_c %>
+    <% else %>
+      <% if tarp_conv %>
+        sfExHcModel = DOE2
+      <% else %>
+        sfExHcModel = UNIFIED
+      <% end %>
+    <% end %>
+  <% end %>
+  <% if h_int %>
+    sfInHcModel = INPUT
+    sfInHcMult = <%= h_int[sym]*u_c %>
+  <% else %>
+    <% if tarp_conv %>
+      sfInHcModel = TARP
+    <% else %>
+      sfInHcModel = UNIFIED
+    <% end %>
+  <% end %>
+
+  <% for door in (1..surface[:doors]) %>
+    <%
+    door_name = surface[:name] + " Door " + door.to_s
+    %>
+    DOOR  "<%= door_name %>"
+      drArea = <%= door_height*door_width %>
+      drModel = forward_difference
+      drExRf = 1.67
+      drCon = "Door"
+      drExAbs = <%= ext_sol_abs %>
+      drInAbs = <%= int_sol_abs %>
+      drExEpsLW = <%= ext_lw_abs %>
+      drInEpsLW = <%= int_lw_abs %>
   <% end %>
 
   <% for win in (1..surface[:windows]) %>
@@ -380,11 +473,11 @@ window_area = 0.0
         lfDepth = <%= overhang_depth %>
         lfTopUp = <%= overhang_height %>
         lfDistL = 0.0
-        lfBotUp = <%= height - overhang_height - win_height %>
+        lfBotUp = <%= height_cond - overhang_height - win_height %>
         rfDepth = <%= overhang_depth %>
         rfTopUp = <%= overhang_height %>
         rfDistR = 0.0
-        rfBotUp = <%= height - overhang_height - win_height %>
+        rfBotUp = <%= height_cond - overhang_height - win_height %>
         <% else %>
         <% if win == 1 %>
         ohExL = <%= 0.5*m_ft %>
@@ -420,11 +513,11 @@ ALTER ZONE "Main Zone"
 
   <%
   # Sun Zone surfaces
-  surfaces << {:name=>"Sun East Wall",:type=>"Wall",:area=>ss_depth*height,:azm=>90,:windows=>0}
-  surfaces << {:name=>"Sun South Wall",:type=>"Wall",:area=>width*height,:azm=>180,:windows=>2}
-  surfaces << {:name=>"Sun West Wall",:type=>"Wall",:area=>ss_depth*height,:azm=>270,:windows=>0}
-  surfaces << {:name=>"Sun Roof",:type=>"Roof",:area=>ss_area,:windows=>0}
-  surfaces << {:name=>"Sun Floor",:type=>"Floor",:area=>ss_area,:windows=>0}
+  surfaces_cond << {:name=>"Sun East Wall",:type=>"Wall",:area=>ss_depth*height_cond,:azm=>90,:windows=>0}
+  surfaces_cond << {:name=>"Sun South Wall",:type=>"Wall",:area=>width*height_cond,:azm=>180,:windows=>2}
+  surfaces_cond << {:name=>"Sun West Wall",:type=>"Wall",:area=>ss_depth*height_cond,:azm=>270,:windows=>0}
+  surfaces_cond << {:name=>"Sun Roof",:type=>"Roof",:area=>ss_area,:windows=>0}
+  surfaces_cond << {:name=>"Sun Floor",:type=>"Floor",:area=>ss_area,:windows=>0}
   %>
 ZONE "Sun Zone"
   znModel = CZM
@@ -432,10 +525,10 @@ ZONE "Sun Zone"
   znVol = <%= ss_vol %>
   infAC = <%= ach %>
   znFloorZ = 0.0
-  znCeilingHt = <%= height %>
-  znEaveZ = <%= height %>
+  znCeilingHt = <%= height_cond %>
+  znEaveZ = <%= height_cond %>
 
-  <% for surface in surfaces[-5..-1] %>
+  <% for surface in surfaces_cond[-5..-1] %>
   SURFACE "<%= surface[:name] %>"
     <% if surface[:type] == "Wall" %>
     sfType = Wall
@@ -489,11 +582,11 @@ ZONE "Sun Zone"
         lfDepth = <%= overhang_depth %>
         lfTopUp = <%= overhang_height %>
         lfDistL = 0.0
-        lfBotUp = <%= height - overhang_height - win_height %>
+        lfBotUp = <%= height_cond - overhang_height - win_height %>
         rfDepth = <%= overhang_depth %>
         rfTopUp = <%= overhang_height %>
         rfDistR = 0.0
-        rfBotUp = <%= height - overhang_height - win_height %>
+        rfBotUp = <%= height_cond - overhang_height - win_height %>
         <% else %>
           <% if win == 1 %>
         ohExL = <%= 0.5*m_ft %>
@@ -567,9 +660,13 @@ EXPORT
   EXPORTCOL colHead="Cooling Load [Wh]" colVal=-@znRes["Main Zone"].S.qcMech*<%= 1/w_btu %>
 
   // Incident Solar
-<% for surface in surfaces[0..5] %>
+<% for surface in surfaces_cond[0..5] %>
   <% if ["Wall", "Roof"].include?(surface[:type]) %>
-  EXPORTCOL colHead="Incident Solar <%= surface[:name] %> [Wh/m2]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.sgTarg.tot*<%= 1/q_c %>*@Top.subhrDur
+    <% if surface[:framing_factor] > 0 %>
+  EXPORTCOL colHead="Incident Solar <%= surface[:name] %>-Cav [Wh/m2]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcO.sgTarg.tot*<%= 1/q_c %>*@Top.subhrDur
+    <% else %>
+  EXPORTCOL colHead="Incident Solar <%= surface[:name] %>-Cav [Wh/m2]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcO.sgTarg.tot*<%= 1/q_c %>*@Top.subhrDur
+    <% end %>
   <% end %>
 <% end %>
 
@@ -579,16 +676,52 @@ EXPORT
 <% end %>
 
   // Convective Coefficients
-<% for surface in surfaces[0..5] %>
+<% for surface in surfaces_cond[0..5] %>
   <% if ["Wall", "Roof", "Floor"].include?(surface[:type]) %>
+    <% if surface[:framing_factor] > 0 %>
+  EXPORTCOL colHead="Exterior Conv. Coeff. <%= surface[:name] %>-Cav [W/m2-K]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcO.hxa*<%= 1/u_c %>
+  EXPORTCOL colHead="Interior Conv. Coeff. <%= surface[:name] %>-Cav [W/m2-K]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcI.hxa*<%= 1/u_c %>
+    <% else %>
   EXPORTCOL colHead="Exterior Conv. Coeff. <%= surface[:name] %> [W/m2-K]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.hxa*<%= 1/u_c %>
   EXPORTCOL colHead="Interior Conv. Coeff. <%= surface[:name] %> [W/m2-K]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.hxa*<%= 1/u_c %>
+    <% end %>
   <% end %>
 <% end %>
 <% for win in windows %>
+  <% if win.include? "1" %>
   EXPORTCOL colHead="Exterior Conv. Coeff. <%= win %> [W/m2-K]" colVal=@xsurf["<%= win %>"].sbcO.hxa*<%= 1/u_c %>
   EXPORTCOL colHead="Interior Conv. Coeff. <%= win %> [W/m2-K]" colVal=@xsurf["<%= win %>"].sbcI.hxa*<%= 1/u_c %>
+  <% end %>
 <% end %>
+
+  // Surface Combined Heat Transfer Coefficients
+  EXPORTCOL colHead="North Wall-Cav Indoor hx_tot [Btu/hr-ft2-F]" colVal=@surface["North Wall-Cav"].sbcI.hxtot
+  EXPORTCOL colHead="North Wall-Cav Outdoor hx_tot [Btu/hr-ft2-F]" colVal=@surface["North Wall-Cav"].sbcO.hxtot
+
+REPORTFILE "Main Zone Data Dump"
+  rfFileName = "Main ZDD.rep"
+  rfFileStat = OVERWRITE
+
+REPORT
+  rpReportfile = "Main Zone Data Dump"
+  rpHeader = Yes
+  rpFooter = No
+  rpType = ZDD
+  rpZone = "Main Zone"
+
+EXPORTFILE "Main Zone Statistics"
+  xfFileName = "Main ZST.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Main Zone Statistics"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exType = ZST
+  exZone = "Main Zone"
+  exFreq = HOUR
+  exDayBeg = JAN 1
+  exDayEnd = DEC 31
 
 /*
 EXPORTFILE "Results"
