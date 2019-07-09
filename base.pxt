@@ -12,10 +12,12 @@
   parameter "int_sol_abs", :default=>0.6
   parameter "ext_lw_abs", :default=>0.9
   parameter "int_lw_abs", :default=>0.9
-  parameter "win_u", :default=>2.10 # W/m2-K
-  parameter "win_shgc", :default=>0.769
-  parameter "win_panes", :default=>2
-  parameter "ach", :default=>0.5
+  # Material properties for exterior windows from Table 7-4 in ASHRAE Standard 140-2011
+  parameter "win_u", :default=>1.039 # Btu/hr-ft2-F
+  parameter "win_shgc", :default=>0.670
+  parameter "win_panes", :default=>1
+  parameter "ach", :default=>0.67
+  parameter "ach_attic", :default=>2.4
   parameter "heat_sp", :default=>20 # C
   parameter "cool_sp", :default=>27 # C
   parameter "heat_sb", :default=>20 # C
@@ -72,56 +74,78 @@ hConvMod = No
 <% end %>
 
 // Constructions
+// Material properties for exterior walls and doors from Table 7-4 in ASHRAE Standard 140-2011
 
-MATERIAL "Plasterboard"
-  matCond = <%= 0.16*k_c %>
-  matSpHt = <%= 840*cp_c %>
-  matDens = <%= 950*rho_c %>
+MATERIAL "Plasterboard"       // 0.5-in. thickness
+  matCond = 0.0926             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.26               // Specific heat of material, Btu/lb-F
+  matDens = 50.0               // Density, lb/ft3
 
-MATERIAL "Concrete Block"
-  matCond = <%= 0.51*k_c %>
-  matSpHt = <%= 1000*cp_c %>
-  matDens = <%= 1400*rho_c %>
+MATERIAL "Fiberglass Batt"       // 3.5-in. thickness
+  matCond = 0.0265
+  matSpHt = 0.20
+  matDens = 0.6
 
-MATERIAL "Fiberglass Quilt"
-  matCond = <%= 0.04*k_c %>
-  matSpHt = <%= 840*cp_c %>
-  matDens = <%= 12*rho_c %>
+MATERIAL "Frame 2x4 16-in. O.C."       // 3.5-in. thickness
+  matCond = 0.0667
+  matSpHt = 0.33
+  matDens = 32.0
 
-MATERIAL "Foam Insulation"
-  matCond = <%= 0.04*k_c %>
-  matSpHt = <%= 1400*cp_c %>
-  matDens = <%= 10*rho_c %>
+MATERIAL "Fiberboard Sheathing"       // 0.5-in. thickness
+  matCond = 0.0316
+  matSpHt = 0.31
+  matDens = 18.0
 
-MATERIAL "Wood Siding"
-  matCond = <%= 0.14*k_c %>
-  matSpHt = <%= 900*cp_c %>
-  matDens = <%= 530*rho_c %>
+MATERIAL "Hardboard Siding"       // 7/16 (0.44)-in. thickness
+  matCond = 0.0544
+  matSpHt = 0.28
+  matDens = 40.0
 
-MATERIAL "Timber Flooring"
-  matCond = <%= 0.14*k_c %>
-  matSpHt = <%= 1200*cp_c %>
-  matDens = <%= 650*rho_c %>
+MATERIAL "Solid Core Door"       // 1.75-in. thickness
+  matCond = 0.0669
+  matSpHt = 0.33
+  matDens = 32.0
 
-MATERIAL "Concrete Slab"
-  matCond = <%= 1.13*k_c %>
-  matSpHt = <%= 1000*cp_c %>
-  matDens = <%= 1400*rho_c %>
+// Material properties for raised floor exposed to air from Table 7-5 in ASHRAE Standard 140-2011
 
-MATERIAL "Insulation"
-  matCond = <%= 0.04*k_c %>
-  matSpHt = <%= 0*cp_c %>
-  matDens = <%= 0*rho_c %>
+MATERIAL "Carpet with Fibrous Pad"
+  matCond = 0.0001       // No conductivity specified, note at bottom of Table 7-5 says "There is not enough information available for modeling thermal mass of carpet."
+  matSpHt = 0.34
 
-MATERIAL "Roofdeck"
-  matCond = <%= 0.14*k_c %>
-  matSpHt = <%= 900*cp_c %>
-  matDens = <%= 530*rho_c %>
+MATERIAL "Plywood"       // 0.75-in. thickness except 0.5-in. in attic gable walls and roof
+  matCond = 0.0667
+  matSpHt = 0.29
+  matDens = 34.0
 
-MATERIAL "Common Wall"
-  matCond = <%= 0.510*k_c %>
-  matSpHt = <%= 1000*cp_c %>
-  matDens = <%= 1400*rho_c %>
+MATERIAL "Joists 2x8 16-in. O.C."       // 3.5-in. thickness
+  matCond = 0.0667
+  matSpHt = 0.33
+  matDens = 32.0
+
+// Material properties for ceiling, attic gable walls, and roof from Table 7-6 in ASHRAE Standard 140-2011
+
+MATERIAL "Fiberglass Batt - Ceiling"       // 6.25-in. thickness
+  matCond = 0.0274
+  matSpHt = 0.20
+  matDens = 0.6
+
+MATERIAL "Joists 2x6 24-in. O.C."       // 5.5-in. thickness
+  matCond = 0.0667
+  matSpHt = 0.33
+  matDens = 32.0
+
+MATERIAL "Asphalt Shingle"       // 0.25-in. thickness
+  matCond = 0.0473
+  matSpHt = 0.30
+  matDens = 70.0
+
+// Material properties for interior wall air gap from air properties at 1atm and 75F
+
+MATERIAL "Air Gap"       // 3.5-in. thickness
+  matCond = 0.01512
+  matSpHt = 0.24
+  matDens = 0.074
+
 
 <% if opaque %>
 Material "Opaque Pane"
@@ -145,19 +169,46 @@ CONSTRUCTION "Opaque Window"
 
 <% if construction_mass == "LOW" %>
 
-CONSTRUCTION "Exterior Wall"
-  LAYER lrMat="Plasterboard" lrThk=<%= 0.012*m_ft %>
-  LAYER lrMat="Fiberglass Quilt" lrThk=<%= 0.066*m_ft %>
-  LAYER lrMat="Wood Siding" lrThk=<%= 0.009*m_ft %>
+CONSTRUCTION "Exterior Wall - Frame"    // Assembly for portion of exterior walls that contain framing
+  LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
+  LAYER lrMat="Frame 2x4 16-in. O.C." lrThk= (3.50 / 12.00)
+  LAYER lrMat="Fiberboard Sheathing" lrThk= (0.50 / 12.00)
+  LAYER lrMat="Hardboard Siding" lrThk= (7.00 / (16.00 * 12.00 ) )
 
-CONSTRUCTION "Raised Floor"
-  LAYER lrMat="Timber Flooring" lrThk=<%= 0.025*m_ft %>
-  LAYER lrMat="Insulation" lrThk=<%= 1.003*m_ft %>
+CONSTRUCTION "Exterior Wall - Cavity"    // Assembly for portion of exterior walls that contain cavity between framing
+  LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
+  LAYER lrMat="Fiberglass Batt" lrThk= (3.50 / 12.00)
+  LAYER lrMat="Fiberboard Sheathing" lrThk= (0.50 / 12.00)
+  LAYER lrMat="Hardboard Siding" lrThk= (7.00 / (16.00 * 12.00 ) )
+
+CONSTRUCTION "Door"
+  LAYER lrMat="Solid Core Door" lrThk= (1.75 / 12.00)
+
+CONSTRUCTION "Raised Floor - Frame"    // Assembly for portion of raised floors that contain framing
+  LAYER lrMat="Carpet with Fibrous Pad" lrThk= 0.0001 // No thickness specified, note at bottom of Table 7-5 says "There is not enough information available for modeling thermal mass of carpet."
+  LAYER lrMat="Plywood" lrThk= (0.75 / 12.00)
+  LAYER lrMat="Joists 2x8 16-in. O.C." lrThk= (3.50 / 12.00)
+
+CONSTRUCTION "Raised Floor - Cavity"    // Assembly for portion of raised floors that contain cavity between framing
+  LAYER lrMat="Carpet with Fibrous Pad" lrThk= 0.0001 // No thickness specified, note at bottom of Table 7-5 says "There is not enough information available for modeling thermal mass of carpet."
+  LAYER lrMat="Plywood" lrThk= (0.75 / 12.0)
+  LAYER lrMat="Fiberglass Batt" lrThk= (3.50 / 12.00)
 
 CONSTRUCTION "Roof"
-  LAYER lrMat="Plasterboard" lrThk=<%= 0.010*m_ft %>
-  LAYER lrMat="Fiberglass Quilt" lrThk=<%= 0.1118*m_ft %>
-  LAYER lrMat="Roofdeck" lrThk=<%= 0.019*m_ft %>
+  LAYER lrMat="Plywood" lrThk= (0.50 / 12.00)
+  LAYER lrMat="Asphalt Shingle" lrThk= (0.25 / 12.00)
+
+CONSTRUCTION "Gable Wall"
+  LAYER lrMat="Plywood" lrThk= (0.50 / 12.00)
+  LAYER lrMat="Hardboard Siding" lrThk= (7.00 / (16.00 * 12.00 ) )
+
+CONSTRUCTION "Ceiling - Frame"    // Assembly for portion of ceilings that contain framing
+  LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
+  LAYER lrMat="Joists 2x6 24-in. O.C." lrThk= (5.50 / 12.00)
+
+CONSTRUCTION "Ceiling - Cavity"    // Assembly for portion of ceilings that contain cavity between framing
+  LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
+  LAYER lrMat="Fiberglass Batt - Ceiling" lrThk= (6.25 / 12.00)
 
 <% elsif construction_mass == "LOW-EFF" %>
 
@@ -446,7 +497,7 @@ window_area = 0.0
       wnWidth = <%= win_width %>
       wnModel = ASHWAT
       wnNGlz = <%= win_panes %>
-      wnUNFRC = <%= win_u*u_c %>
+      wnUNFRC = <%= win_u %>
       wnSHGC = <%= win_shgc %>
       wnExEpsLW = 0.84
       wnInEpsLW = 0.84
@@ -633,12 +684,12 @@ ZONE "Sun Zone"
 
     <% for win in (1..surface[:windows]) %>
       <% window_name = surface[:name] + " Window " + win.to_s %>
-    WINDOW "<%= window_name %>"
+    WINDOW "<%= window_name %>
       wnHeight = <%= win_height %>
       wnWidth = <%= win_width %>
       wnModel = ASHWAT
       wnNGlz = <%= win_panes %>
-      wnUNFRC = <%= win_u*u_c %>
+      wnUNFRC = <%= win_u %>
       wnSHGC = <%= win_shgc %>
       wnExEpsLW = 0.84
       wnInEpsLW = 0.84
