@@ -81,82 +81,82 @@ MATERIAL "Plasterboard"       // 0.5-in. thickness
   matDens = 50.0               // Density, lb/ft3
 
 MATERIAL "Fiberglass Batt"       // 3.5-in. thickness
-  matCond = 0.0265
-  matSpHt = 0.20
-  matDens = 0.6
+  matCond = 0.0265             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.20               // Specific heat of material, Btu/lb-F
+  matDens = 0.6               // Density, lb/ft3
 
 MATERIAL "Frame 2x4 16-in. O.C."       // 3.5-in. thickness
-  matCond = 0.0667
-  matSpHt = 0.33
-  matDens = 32.0
+  matCond = 0.0667             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.33               // Specific heat of material, Btu/lb-F
+  matDens = 32.0               // Density, lb/ft3
 
 MATERIAL "Fiberboard Sheathing"       // 0.5-in. thickness
-  matCond = 0.0316
-  matSpHt = 0.31
-  matDens = 18.0
+  matCond = 0.0316             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.31               // Specific heat of material, Btu/lb-F
+  matDens = 18.0               // Density, lb/ft3
 
 MATERIAL "Hardboard Siding"       // 7/16 (0.44)-in. thickness
-  matCond = 0.0544
-  matSpHt = 0.28
-  matDens = 40.0
+  matCond = 0.0544             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.28               // Specific heat of material, Btu/lb-F
+  matDens = 40.0               // Density, lb/ft3
 
 MATERIAL "Solid Core Door"       // 1.75-in. thickness
-  matCond = 0.0669
-  matSpHt = 0.33
-  matDens = 32.0
+  matCond = 0.0669             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.33               // Specific heat of material, Btu/lb-F
+  matDens = 32.0               // Density, lb/ft3
 
 // Material properties for raised floor exposed to air from Table 7-5 in ASHRAE Standard 140-2011
 
 MATERIAL "Carpet with Fibrous Pad"
   matCond = 0.0001       // No conductivity specified, note at bottom of Table 7-5 says "There is not enough information available for modeling thermal mass of carpet."
-  matSpHt = 0.34
+  matSpHt = 0.34               // Specific heat of material, Btu/lb-F
 
 MATERIAL "Plywood"       // 0.75-in. thickness except 0.5-in. in attic gable walls and roof
-  matCond = 0.0667
-  matSpHt = 0.29
-  matDens = 34.0
+  matCond = 0.0667             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.29               // Specific heat of material, Btu/lb-F
+  matDens = 34.0               // Density, lb/ft3
 
 MATERIAL "Joists 2x8 16-in. O.C."       // 3.5-in. thickness
-  matCond = 0.0667
-  matSpHt = 0.33
-  matDens = 32.0
+  matCond = 0.0667             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.33               // Specific heat of material, Btu/lb-F
+  matDens = 32.0               // Density, lb/ft3
 
 // Material properties for ceiling, attic gable walls, and roof from Table 7-6 in ASHRAE Standard 140-2011
 
 MATERIAL "Fiberglass Batt - Ceiling"       // 6.25-in. thickness
-  matCond = 0.0274
-  matSpHt = 0.20
-  matDens = 0.6
+  matCond = 0.0274             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.20               // Specific heat of material, Btu/lb-F
+  matDens = 0.6               // Density, lb/ft3
 
 MATERIAL "Joists 2x6 24-in. O.C."       // 5.5-in. thickness
-  matCond = 0.0667
-  matSpHt = 0.33
-  matDens = 32.0
+  matCond = 0.0667             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.33               // Specific heat of material, Btu/lb-F
+  matDens = 32.0               // Density, lb/ft3
 
 MATERIAL "Asphalt Shingle"       // 0.25-in. thickness
-  matCond = 0.0473
-  matSpHt = 0.30
-  matDens = 70.0
+  matCond = 0.0473             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.30               // Specific heat of material, Btu/lb-F
+  matDens = 70.0               // Density, lb/ft3
 
 // Material properties for interior wall air gap from air properties at 1atm and 75F
 
 MATERIAL "Air Gap"       // 3.5-in. thickness
-  matCond = 0.01512
-  matSpHt = 0.24
-  matDens = 0.074
+  matCond = 0.01512             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.24               // Specific heat of material, Btu/lb-F
+  matDens = 0.074               // Density, lb/ft3
 
 
 <% if opaque %>
 Material "Opaque Pane"
-  matCond = <%= 1.00*k_c %>
-  matSpHt = <%= 750*cp_c %>
-  matDens = <%= 2470*rho_c %>
+  matCond = <%= 1.00*k_c %>             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = <%= 750*cp_c %>               // Specific heat of material, Btu/lb-F
+  matDens = <%= 2470*rho_c %>               // Density, lb/ft3
   matThk = <%= 0.003048*m_ft %>
 
 Material "Air Gap"
-  matCond = <%= 0.0625*k_c %>
-  matSpHt = <%= 1006.103271*cp_c %>
-  matDens = <%= 1.292498*rho_c %>
+  matCond = <%= 0.0625*k_c %>             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = <%= 1006.103271*cp_c %>               // Specific heat of material, Btu/lb-F
+  matDens = <%= 1.292498*rho_c %>               // Density, lb/ft3
   matThk = <%= 0.012*m_ft %>
 
 CONSTRUCTION "Opaque Window"
