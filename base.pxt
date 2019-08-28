@@ -108,7 +108,7 @@ MATERIAL "Solid Core Door"       // 1.75-in. thickness
 // Material properties for raised floor exposed to air from Table 7-5 in ASHRAE Standard 140-2011
 
 MATERIAL "Carpet with Fibrous Pad"
-  matCond = 0.0001       // No conductivity specified, note at bottom of Table 7-5 says "There is not enough information available for modeling thermal mass of carpet."
+  matCond = 0.020       // No conductivity specified in Table 7-5, assumed carpet pad is 0.5" thick and calculated conductivity to reach desired U-value of 0.481 Btu/hr/ft2/F for this material layer
   matSpHt = 0.34               // Specific heat of material, Btu/lb-F
 
 MATERIAL "Plywood"       // 0.75-in. thickness except 0.5-in. in attic gable walls and roof
@@ -184,12 +184,12 @@ CONSTRUCTION "Door"
   LAYER lrMat="Solid Core Door" lrThk= (1.75 / 12.00)
 
 CONSTRUCTION "Raised Floor - Frame"    // Assembly for portion of raised floors that contain framing
-  LAYER lrMat="Carpet with Fibrous Pad" lrThk= 0.0001 // No thickness specified, note at bottom of Table 7-5 says "There is not enough information available for modeling thermal mass of carpet."
+  LAYER lrMat="Carpet with Fibrous Pad" lrThk= (0.5 / 12.00) // No thickness specified in Table 7-5, assumed carpet pad is 0.5" thick
   LAYER lrMat="Plywood" lrThk= (0.75 / 12.00)
   LAYER lrMat="Joists 2x8 16-in. O.C." lrThk= (3.50 / 12.00)
 
 CONSTRUCTION "Raised Floor - Cavity"    // Assembly for portion of raised floors that contain cavity between framing
-  LAYER lrMat="Carpet with Fibrous Pad" lrThk= 0.0001 // No thickness specified, note at bottom of Table 7-5 says "There is not enough information available for modeling thermal mass of carpet."
+  LAYER lrMat="Carpet with Fibrous Pad" lrThk= (0.5 / 12.00) // No thickness specified in Table 7-5, assumed carpet pad is 0.5" thick
   LAYER lrMat="Plywood" lrThk= (0.75 / 12.0)
   LAYER lrMat="Fiberglass Batt" lrThk= (3.50 / 12.00)
 
@@ -369,9 +369,8 @@ window_area = 0.0
     sfType = Floor
     sfCon = "Raised Floor - Frame"
     sfArea = <%= surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors])) %>
-    sfExCnd = SPECIFIEDT
+    sfExCnd = Ambient
     sfExAbs = 0               // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor shall receive no solar radiation
-    sfExT = @weather.db       // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor exposed to outside air temperature
   <% end %>
     sfModel = forward_difference
     sfInAbs = <%= int_sol_abs %>
@@ -434,9 +433,8 @@ window_area = 0.0
     sfType = Floor
     sfCon = "Raised Floor - Cavity"
     sfArea = <%= surface[:area] - (surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors]))) %>
-    sfExCnd = SPECIFIEDT
+    sfExCnd = Ambient
     sfExAbs = 0               // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor shall receive no solar radiation
-    sfExT = @weather.db       // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor exposed to outside air temperature
   <% end %>
     sfModel = forward_difference
     sfInAbs = <%= int_sol_abs %>
