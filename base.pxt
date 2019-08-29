@@ -47,7 +47,7 @@ def c_f(c)
 end
 
 # Internal use
-nsteps = 10
+nsteps = 1
 
 tarp_conv = false
 
@@ -795,14 +795,13 @@ EXPORT
   exHeader = ColumnsOnly
   exFooter = No
   exType = UDT
-  exFreq = SUBHOUR
+  exFreq = HOUR
   exDayBeg = JAN 1
   exDayEnd = DEC 31
 
   EXPORTCOL colHead="Month" colVal=$month
   EXPORTCOL colHead="Day" colVal=$dayOfMonth
   EXPORTCOL colHead="Hour" colVal=$hour
-  EXPORTCOL colHead="Subhour" colVal=$subhour
   EXPORTCOL colHead="Outdoor Temp [C]" colVal=($tDbOSh - 32)*<%= 1/k_r %>
   EXPORTCOL colHead="Sky Temp [C]" colVal=(@Top.tSkySh - 32)*<%= 1/k_r %>
   EXPORTCOL colHead="Zone Temp [C]" colVal=(@znRes["Main Zone"].S.tAir - 32)*<%= 1/k_r %>
@@ -833,28 +832,6 @@ EXPORT
   EXPORTCOL colHead="Transmitted Solar [Wh/m2]" colVal=@znRes["Main Zone"].S.qSlr*<%= m2_ft2/(w_btu*window_area) %>
 <% end %>
 
-  // Convective Coefficients
-<% for surface in surfaces_cond[0..5] %>
-  <% if ["Wall", "Roof", "Floor"].include?(surface[:type]) %>
-    <% if surface[:framing_factor] > 0 %>
-  EXPORTCOL colHead="Exterior Conv. Coeff. <%= surface[:name] %>-Cav [W/m2-K]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcO.hxa*<%= 1/u_c %>
-  EXPORTCOL colHead="Interior Conv. Coeff. <%= surface[:name] %>-Cav [W/m2-K]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcI.hxa*<%= 1/u_c %>
-    <% else %>
-  EXPORTCOL colHead="Exterior Conv. Coeff. <%= surface[:name] %> [W/m2-K]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.hxa*<%= 1/u_c %>
-  EXPORTCOL colHead="Interior Conv. Coeff. <%= surface[:name] %> [W/m2-K]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.hxa*<%= 1/u_c %>
-    <% end %>
-  <% end %>
-<% end %>
-<% for win in windows %>
-  <% if win.include? "1" %>
-  EXPORTCOL colHead="Exterior Conv. Coeff. <%= win %> [W/m2-K]" colVal=@xsurf["<%= win %>"].sbcO.hxa*<%= 1/u_c %>
-  EXPORTCOL colHead="Interior Conv. Coeff. <%= win %> [W/m2-K]" colVal=@xsurf["<%= win %>"].sbcI.hxa*<%= 1/u_c %>
-  <% end %>
-<% end %>
-
-  // Surface Combined Heat Transfer Coefficients
-  EXPORTCOL colHead="North Wall-Cav Indoor hx_tot [Btu/hr-ft2-F]" colVal=@surface["North Wall-Cav"].sbcI.hxtot
-  EXPORTCOL colHead="North Wall-Cav Outdoor hx_tot [Btu/hr-ft2-F]" colVal=@surface["North Wall-Cav"].sbcO.hxtot
 
 REPORTFILE "Main Zone Data Dump"
   rfFileName = "Main ZDD.rep"
@@ -948,11 +925,88 @@ EXPORT
   EXPORTCOL colHead="Attic Zone Infiltration [ACH]" colVal=@zone["Attic Zone"].infAC
   EXPORTCOL colHead="Attic Zone Infiltration [cfm]" colVal=@zone["Attic Zone"].infAC * @zone["Attic Zone"].znVol / 60
 
-/*
+EXPORTFILE "Main Zone Surface Coefficients"
+  xfFileName = "Main Zone Surface Coefficients.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Main Zone Surface Coefficients"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exType = UDT
+  exFreq = HOUR
+  exDayBeg = JAN 1
+  exDayEnd = DEC 31
+
+  EXPORTCOL colHead="Month" colVal=$month
+  EXPORTCOL colHead="Day" colVal=$dayOfMonth
+  EXPORTCOL colHead="Hour" colVal=$hour
+
+  // Convective Coefficients
+<% for surface in surfaces_cond[0..5] %>
+  <% if ["Wall", "Roof", "Floor"].include?(surface[:type]) %>
+    <% if surface[:framing_factor] > 0 %>
+  EXPORTCOL colHead="Exterior Conv. Coeff. <%= surface[:name] %>-Cav [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcO.hxa
+  EXPORTCOL colHead="Interior Conv. Coeff. <%= surface[:name] %>-Cav [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcI.hxa
+//  EXPORTCOL colHead="Exterior Rad. Coeff. <%= surface[:name] %>-Cav [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcO.hxr
+//  EXPORTCOL colHead="Interior Rad. Coeff. <%= surface[:name] %>-Cav [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcI.hxr
+  EXPORTCOL colHead="Exterior hx_tot <%= surface[:name] %>-Cav [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcO.hxtot
+  EXPORTCOL colHead="Interior hx_tot <%= surface[:name] %>-Cav [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcI.hxtot
+    <% else %>
+  EXPORTCOL colHead="Exterior Conv. Coeff. <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.hxa
+  EXPORTCOL colHead="Interior Conv. Coeff. <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.hxa
+  EXPORTCOL colHead="Exterior Rad. Coeff. <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.hxr
+  EXPORTCOL colHead="Interior Rad. Coeff. <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.hxr
+  EXPORTCOL colHead="Exterior hx_tot <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.hxtot
+  EXPORTCOL colHead="Interior hx_tot <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.hxtot
+    <% end %>
+  <% end %>
+<% end %>
+<% for win in windows %>
+  <% if win.include? "1" %>
+  EXPORTCOL colHead="Exterior Conv. Coeff. <%= win %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= win %>"].sbcO.hxa
+  EXPORTCOL colHead="Interior Conv. Coeff. <%= win %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= win %>"].sbcI.hxa
+//  EXPORTCOL colHead="Exterior Rad. Coeff. <%= win %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= win %>"].sbcO.hxr
+//  EXPORTCOL colHead="Interior Rad. Coeff. <%= win %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= win %>"].sbcI.hxr
+  EXPORTCOL colHead="Exterior hx_tot <%= win %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= win %>"].sbcO.hxtot
+  EXPORTCOL colHead="Interior hx_tot <%= win %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= win %>"].sbcI.hxtot
+  <% end %>
+<% end %>
+
+EXPORTFILE "Attic Zone Surface Coefficients"
+  xfFileName = "Attic Zone Surface Coefficients.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Attic Zone Surface Coefficients"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exType = UDT
+  exFreq = HOUR
+  exDayBeg = JAN 1
+  exDayEnd = DEC 31
+
+  EXPORTCOL colHead="Month" colVal=$month
+  EXPORTCOL colHead="Day" colVal=$dayOfMonth
+  EXPORTCOL colHead="Hour" colVal=$hour
+
+  // Convective Coefficients
+<% for surface in surfaces_attic[0..3] %>
+  <% if ["Wall", "Roof"].include?(surface[:type]) %>
+  EXPORTCOL colHead="Exterior Conv. Coeff. <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.hxa
+  EXPORTCOL colHead="Interior Conv. Coeff. <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.hxa
+  EXPORTCOL colHead="Exterior Rad. Coeff. <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.hxr
+  EXPORTCOL colHead="Interior Rad. Coeff. <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.hxr
+  EXPORTCOL colHead="Exterior hx_tot <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.hxtot
+  EXPORTCOL colHead="Interior hx_tot <%= surface[:name] %> [Btu/hr-ft2-F]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.hxtot
+  <% end %>
+<% end %>
+
 EXPORTFILE "Results"
   xfFileName = "..\\Results.csv"
   xfFileStat = APPEND
 
+/*
 EXPORT
  	exExportfile = "Results"
   exHeader = NO //ColumnsOnly
