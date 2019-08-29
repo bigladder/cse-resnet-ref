@@ -1070,6 +1070,28 @@ EXPORT
   EXPORTCOL colHead="Interior Longwave Emittance <%= surface[:name] %> [-]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.epsLW
   <% end %>
 <% end %>
+
+EXPORTFILE "Main Zone Mechanical Equipment"
+  xfFileName = "Main Zone Mechanical Equipment.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Main Zone Mechanical Equipment"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exType = UDT
+  exFreq = HOUR
+  exDayBeg = JAN 1
+  exDayEnd = DEC 31
+
+  EXPORTCOL colHead="Month" colVal=$month
+  EXPORTCOL colHead="Day" colVal=$dayOfMonth
+  EXPORTCOL colHead="Hour" colVal=$hour
+  EXPORTCOL colHead="Sensible HVAC Power [Btu/hr]" colVal=@zone["Main Zone"].qsHvac
+  EXPORTCOL colHead="Latent HVAC Power [Btu/hr]" colVal=@zone["Main Zone"].qlHvac
+  EXPORTCOL colHead="Fraction Convective Heating [-]" colVal=@zone["Main Zone"].fConvH
+  EXPORTCOL colHead="Fraction Convective Cooling [-]" colVal=@zone["Main Zone"].fConvC
+
 /*
 EXPORTFILE "Results"
   xfFileName = "..\\Results.csv"
