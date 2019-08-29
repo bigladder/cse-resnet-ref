@@ -209,6 +209,15 @@ CONSTRUCTION "Ceiling - Cavity"    // Assembly for portion of ceilings that cont
   LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
   LAYER lrMat="Fiberglass Batt - Ceiling" lrThk= (6.25 / 12.00)
 
+CONSTRUCTION "Interior Wall - Frame"    // Assembly for portion of interior walls that contain framing
+  LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
+  LAYER lrMat="Frame 2x4 16-in. O.C." lrThk= (3.50 / 12.00)
+  LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
+
+CONSTRUCTION "Interior Wall - Cavity"    // Assembly for portion of interior walls that contain cavity between framing
+  LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
+  LAYER lrMat="Air Gap" lrThk= (3.50 / 12.00)
+  LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
 <% elsif construction_mass == "LOW-EFF" %>
 
 CONSTRUCTION "Exterior Wall"
@@ -341,7 +350,9 @@ surfaces_cond = [
   {:name=>"South Wall",:type=>"Wall",:area=>width*height_cond,:azm=>180,:windows=>north_south_windows,:framing_factor=>0.25,:doors=>1},
   {:name=>"West Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>270,:windows=>east_west_windows,:framing_factor=>0.25,:doors=>0},
   {:name=>"Ceiling",:type=>"Ceiling",:area=>floor_area,:windows=>0,:framing_factor=>0.1,:doors=>0},
-  {:name=>"Floor",:type=>"Floor",:area=>floor_area,:windows=>0,:framing_factor=>0.1,:doors=>0}
+  {:name=>"Floor",:type=>"Floor",:area=>floor_area,:windows=>0,:framing_factor=>0.1,:doors=>0},
+  {:name=>"North-South Interior Wall",:type=>"Wall",:area=>632,:azm=>90,:windows=>0,:framing_factor=>0.1,:doors=>0},
+  {:name=>"East-West Interior Wall",:type=>"Wall",:area=>392,:azm=>0,:windows=>0,:framing_factor=>0.1,:doors=>0}
 ]
 windows = []
 window_area = 0.0
@@ -352,9 +363,15 @@ window_area = 0.0
   <% if surface[:type] == "Wall" %>
     <% sym = :wall %>
     sfType = Wall
+    <% if surface[:name].include?("Interior Wall") %>
+    sfCon = "Interior Wall - Frame"
+    sfExCnd = ADJZN
+    sfAdjZn = "Main Zone"
+    <% else %>
     sfCon = "Exterior Wall - Frame"
-    sfAzm = <%= surface[:azm] %>
     sfExCnd = Ambient
+    <% end %>
+    sfAzm = <%= surface[:azm] %>
     sfExAbs = <%= ext_sol_abs %>
   <% elsif surface[:type] == "Ceiling" %>
     <% sym = :ceiling %>
@@ -414,9 +431,15 @@ window_area = 0.0
   <% if surface[:type] == "Wall" %>
     <% sym = :wall %>
     sfType = Wall
+    <% if surface[:name].include?("Interior Wall") %>
+    sfCon = "Interior Wall - Cavity"
+    sfExCnd = ADJZN
+    sfAdjZn = "Main Zone"
+    <% else %>
     sfCon = "Exterior Wall - Cavity"
-    sfAzm = <%= surface[:azm] %>
     sfExCnd = Ambient
+    <% end %>
+    sfAzm = <%= surface[:azm] %>
     sfExAbs = <%= ext_sol_abs %>
   <% elsif surface[:type] == "Ceiling" %>
     <% sym = :ceiling %>
