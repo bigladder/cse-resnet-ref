@@ -353,7 +353,6 @@ window_area = 0.0
     <% sym = :wall %>
     sfType = Wall
     sfCon = "Exterior Wall - Frame"
-    sfArea = <%= surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors])) %>
     sfAzm = <%= surface[:azm] %>
     sfExCnd = Ambient
     sfExAbs = <%= ext_sol_abs %>
@@ -361,7 +360,6 @@ window_area = 0.0
     <% sym = :ceiling %>
     sfType = Ceiling
     sfCon = "Ceiling - Frame"
-    sfArea = <%= surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors])) %>
     sfExCnd = ADJZN
     sfAdjZn = "Attic Zone"
     sfExAbs = <%= ext_sol_abs %>
@@ -369,10 +367,10 @@ window_area = 0.0
     <% sym = :floor %>
     sfType = Floor
     sfCon = "Raised Floor - Frame"
-    sfArea = <%= surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors])) %>
     sfExCnd = Ambient
     sfExAbs = 0               // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor shall receive no solar radiation
   <% end %>
+    sfArea = <%= surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors])) %>
     sfModel = forward_difference
     sfInAbs = <%= int_sol_abs %>
     sfExEpsLW = <%= ext_lw_abs %>
@@ -417,7 +415,6 @@ window_area = 0.0
     <% sym = :wall %>
     sfType = Wall
     sfCon = "Exterior Wall - Cavity"
-    sfArea = <%= surface[:area] - (surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors]))) %>
     sfAzm = <%= surface[:azm] %>
     sfExCnd = Ambient
     sfExAbs = <%= ext_sol_abs %>
@@ -425,7 +422,6 @@ window_area = 0.0
     <% sym = :ceiling %>
     sfType = Ceiling
     sfCon = "Ceiling - Cavity"
-    sfArea = <%= surface[:area] - (surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors]))) %>
     sfExCnd = ADJZN
     sfAdjZn = "Attic Zone"
     sfExAbs = <%= ext_sol_abs %>
@@ -433,10 +429,10 @@ window_area = 0.0
     <% sym = :floor %>
     sfType = Floor
     sfCon = "Raised Floor - Cavity"
-    sfArea = <%= surface[:area] - (surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors]))) %>
     sfExCnd = Ambient
     sfExAbs = 0               // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor shall receive no solar radiation
   <% end %>
+    sfArea = <%= surface[:area] - (surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors]))) %>
     sfModel = forward_difference
     sfInAbs = <%= int_sol_abs %>
     sfExEpsLW = <%= ext_lw_abs %>
