@@ -882,6 +882,27 @@ EXPORT
   exDayBeg = JAN 1
   exDayEnd = DEC 31
 
+EXPORTFILE "Internal Loads"
+  xfFileName = "Internal-Loads.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Internal Loads"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exType = UDT
+  exFreq = HOUR
+  exDayBeg = JAN 1
+  exDayEnd = DEC 31
+
+  EXPORTCOL colHead="Month" colVal=$month
+  EXPORTCOL colHead="Day" colVal=$dayOfMonth
+  EXPORTCOL colHead="Hour" colVal=$hour
+  EXPORTCOL colHead="Main Zone Convective Sensible Gain [Btu]" colVal=@zone["Main Zone"].znSGain
+  EXPORTCOL colHead="Main Zone Radiative Sensible Gain [Btu]" colVal=@gain["Internal Sensible Gain"].gnPower * @gain["Internal Sensible Gain"].gnFrRad
+  EXPORTCOL colHead="Main Zone Sensible Gain [Btu]" colVal=@gain["Internal Sensible Gain"].gnPower
+  EXPORTCOL colHead="Main Zone Latent Gain [Btu]" colVal=@zone["Main Zone"].znLGain
+
 /*
 EXPORTFILE "Results"
   xfFileName = "..\\Results.csv"
