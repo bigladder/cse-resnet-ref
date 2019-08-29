@@ -1002,11 +1002,79 @@ EXPORT
   <% end %>
 <% end %>
 
+EXPORTFILE "Main Zone Surface Radiative Properties"
+  xfFileName = "Main Zone Surface Radiative Properties.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Main Zone Surface Radiative Properties"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exType = UDT
+  exFreq = HOUR
+  exDayBeg = JAN 1
+  exDayEnd = DEC 31
+
+  EXPORTCOL colHead="Month" colVal=$month
+  EXPORTCOL colHead="Day" colVal=$dayOfMonth
+  EXPORTCOL colHead="Hour" colVal=$hour
+
+  // Convective Coefficients
+<% for surface in surfaces_cond[0..5] %>
+  <% if ["Wall", "Roof", "Floor"].include?(surface[:type]) %>
+    <% if surface[:framing_factor] > 0 %>
+//  EXPORTCOL colHead="Exterior Shortwave Absorptance <%= surface[:name] %>-Cav [-]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcO.absSlr
+//  EXPORTCOL colHead="Interior Shortwave Absorptance <%= surface[:name] %>-Cav [-]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcI.absSlr
+//  EXPORTCOL colHead="Exterior Longwave Emittance <%= surface[:name] %>-Cav [-]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcO.epsLW
+//  EXPORTCOL colHead="Interior Longwave Emittance <%= surface[:name] %>-Cav [-]" colVal=@xsurf["<%= surface[:name] %>-Cav"].sbcI.epsLW
+    <% else %>
+  EXPORTCOL colHead="Exterior Shortwave Absorptance <%= surface[:name] %> [-]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.absSlr
+  EXPORTCOL colHead="Interior Shortwave Absorptance <%= surface[:name] %> [-]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.absSlr
+  EXPORTCOL colHead="Exterior Longwave Emittance <%= surface[:name] %> [-]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.epsLW
+  EXPORTCOL colHead="Interior Longwave Emittance <%= surface[:name] %> [-]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.epsLW
+    <% end %>
+  <% end %>
+<% end %>
+<% for win in windows %>
+  <% if win.include? "1" %>
+//  EXPORTCOL colHead="Exterior Shortwave Absorptance <%= win %> [-]" colVal=@xsurf["<%= win %>"].sbcO.absSlr
+//  EXPORTCOL colHead="Interior Shortwave Absorptance <%= win %> [-]" colVal=@xsurf["<%= win %>"].sbcI.absSlr
+//  EXPORTCOL colHead="Exterior Longwave Emittance <%= win %> [-]" colVal=@xsurf["<%= win %>"].sbcO.epsLW
+//  EXPORTCOL colHead="Interior Longwave Emittance <%= win %> [-]" colVal=@xsurf["<%= win %>"].sbcI.epsLW
+  <% end %>
+<% end %>
+
+EXPORTFILE "Attic Zone Surface Radiative Properties"
+  xfFileName = "Attic Zone Surface Radiative Properties.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Attic Zone Surface Radiative Properties"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exType = UDT
+  exFreq = HOUR
+  exDayBeg = JAN 1
+  exDayEnd = DEC 31
+
+  EXPORTCOL colHead="Month" colVal=$month
+  EXPORTCOL colHead="Day" colVal=$dayOfMonth
+  EXPORTCOL colHead="Hour" colVal=$hour
+
+  // Convective Coefficients
+<% for surface in surfaces_attic[0..3] %>
+  <% if ["Wall", "Roof"].include?(surface[:type]) %>
+//  EXPORTCOL colHead="Exterior Shortwave Absorptance <%= surface[:name] %> [-]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.absSlr
+//  EXPORTCOL colHead="Interior Shortwave Absorptance <%= surface[:name] %> [-]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.absSlr
+  EXPORTCOL colHead="Exterior Longwave Emittance <%= surface[:name] %> [-]" colVal=@xsurf["<%= surface[:name] %>"].sbcO.epsLW
+  EXPORTCOL colHead="Interior Longwave Emittance <%= surface[:name] %> [-]" colVal=@xsurf["<%= surface[:name] %>"].sbcI.epsLW
+  <% end %>
+<% end %>
+/*
 EXPORTFILE "Results"
   xfFileName = "..\\Results.csv"
   xfFileStat = APPEND
 
-/*
 EXPORT
  	exExportfile = "Results"
   exHeader = NO //ColumnsOnly
