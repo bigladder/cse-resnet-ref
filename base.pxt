@@ -54,10 +54,10 @@ tarp_conv = false
 # weather file
 if weather == "C"
   weather_file = "TMY-Colorad-v5.0.epw"
-  elevation = 1881 * m_ft # elevation in meters taken from TMY-Colorad-v5.0.epw
+  elevation = 6145 # elevation required by Section 7.2.1.7
 else
   weather_file = "TMY-Lasvega-v5.0.epw"
-  elevation = 664 * m_ft # elevation in meters taken from TMY-Lasvega-v5.0.epw
+  elevation = 2178 # elevation required by Section 7.2.1.7
 end
 
 %>
