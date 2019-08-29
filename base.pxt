@@ -280,6 +280,7 @@ CONSTRUCTION "Common Wall"
 width = 57.0 # East-to-West dimension in feet
 depth = 27.0 # North-to-South dimension in feet
 roof_pitch = 14.23 # Pitch length of angled roof from eave to peak in feet
+roof_tilt = 18.43 # Tilt angle of roof surface above horizontal in degrees
 height_cond = 8.0 # Floor-to-Ceiling height of conditioned zone in feet
 height_attic = 4.5 # Ceiling-to-Roof height of unconditioned attic in feet
 floor_area = width*depth # Floor area for both conditioned and attic zones in square feet
@@ -592,6 +593,8 @@ surfaces_attic = [
     <% sym = :roof %>
     sfType = Ceiling
     sfCon = "Roof"
+    sfAzm = <%= surface[:azm] %>
+    sfTilt = <%= roof_tilt %>
   <% end %>
     sfArea = <%= surface[:area] %>
     sfExCnd = Ambient
