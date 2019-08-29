@@ -54,13 +54,16 @@ tarp_conv = false
 # weather file
 if weather == "C"
   weather_file = "TMY-Colorad-v5.0.epw"
+  elevation = 1881 * m_ft # elevation in meters taken from TMY-Colorad-v5.0.epw
 else
   weather_file = "TMY-Lasvega-v5.0.epw"
+  elevation = 664 * m_ft # elevation in meters taken from TMY-Lasvega-v5.0.epw
 end
 
 %>
 
 wfName = "<%= weather_file %>"
+elevation = <%= elevation %>
 nSubSteps = <%= nsteps %>
 DT = No
 bldgAzm = <%= orientation %>
