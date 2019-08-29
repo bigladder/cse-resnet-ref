@@ -927,6 +927,27 @@ EXPORT
   EXPORTCOL colHead="Main Zone Sensible Gain [Btu]" colVal=@gain["Internal Sensible Gain"].gnPower
   EXPORTCOL colHead="Main Zone Latent Gain [Btu]" colVal=@zone["Main Zone"].znLGain
 
+EXPORTFILE "Infiltration"
+  xfFileName = "Infiltration.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Infiltration"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exType = UDT
+  exFreq = HOUR
+  exDayBeg = JAN 1
+  exDayEnd = DEC 31
+
+  EXPORTCOL colHead="Month" colVal=$month
+  EXPORTCOL colHead="Day" colVal=$dayOfMonth
+  EXPORTCOL colHead="Hour" colVal=$hour
+  EXPORTCOL colHead="Main Zone Infiltration [ACH]" colVal=@zone["Main Zone"].infAC
+  EXPORTCOL colHead="Main Zone Infiltration [cfm]" colVal=@zone["Main Zone"].infAC * @zone["Main Zone"].znVol / 60
+  EXPORTCOL colHead="Attic Zone Infiltration [ACH]" colVal=@zone["Attic Zone"].infAC
+  EXPORTCOL colHead="Attic Zone Infiltration [cfm]" colVal=@zone["Attic Zone"].infAC * @zone["Attic Zone"].znVol / 60
+
 /*
 EXPORTFILE "Results"
   xfFileName = "..\\Results.csv"
