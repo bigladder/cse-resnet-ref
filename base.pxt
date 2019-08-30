@@ -609,9 +609,15 @@ window_area = 0.0
           <% end %>
         <% end %>
       <% end %>
+      <% if case_name.include?("L130A") %>
+      SGDIST sgSurf="Floor-Cav" sgFSO=0.1788
+      SGDIST sgSurf="Floor-Frm" sgFSO=0.0199
+      SGDIST sgSurf="East-West Interior Wall-Cav" sgFSO=0.1189
+      <% else %>
       SGDIST sgSurf="Floor-Cav" sgFSO=0.1772
       SGDIST sgSurf="Floor-Frm" sgFSO=0.0197
       SGDIST sgSurf="East-West Interior Wall-Cav" sgFSO=0.1179
+      <% end %>
     <% else %>
     DOOR  "<%= window_name %>"
       drArea = <%= win_height*win_width %>

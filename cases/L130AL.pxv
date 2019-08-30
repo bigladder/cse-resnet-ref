@@ -1,0 +1,5 @@
+:case_name=>"L130AL",
+:weather=>"L",
+:win_u=>0.30,
+:win_shgc=>0.335,
+:win_panes=>2
