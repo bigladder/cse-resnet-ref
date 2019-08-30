@@ -61,7 +61,7 @@ else
   weather_file = "TMY-Lasvega-v5.0.epw"
   elevation = 2178 # elevation required by Section 7.2.1.7
   heat_power = 0 # No heating, required by Section 7.2.1.14.1
-  cool_power = 3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
+  cool_power = -3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
 end
 
 %>
@@ -1091,6 +1091,8 @@ EXPORT
   EXPORTCOL colHead="Month" colVal=$month
   EXPORTCOL colHead="Day" colVal=$dayOfMonth
   EXPORTCOL colHead="Hour" colVal=$hour
+  EXPORTCOL colHead="Outdoor Drybulb [F]" colVal=$tDbOSh
+  EXPORTCOL colHead="Main Zone Temp [F]" colVal=@znRes["Main Zone"].S.tAir
   EXPORTCOL colHead="Sensible HVAC Power [Btu/hr]" colVal=@zone["Main Zone"].qsHvac
   EXPORTCOL colHead="Latent HVAC Power [Btu/hr]" colVal=@zone["Main Zone"].qlHvac
   EXPORTCOL colHead="Fraction Convective Heating [-]" colVal=@zone["Main Zone"].fConvH
