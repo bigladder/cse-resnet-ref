@@ -17,8 +17,8 @@
   parameter "win_panes", :default=>1
   parameter "ach", :default=>0.67
   parameter "ach_attic", :default=>2.4
-  parameter "heat_sp", :default=>20 # C
-  parameter "cool_sp", :default=>27 # C
+  parameter "heat_sp", :default=>68 # F
+  parameter "cool_sp", :default=>78 # F
   parameter "heat_sb", :default=>20 # C
   parameter "vent_fan", :default=>false
   parameter "sunspace", :default=>false
@@ -55,9 +55,13 @@ tarp_conv = false
 if weather == "C"
   weather_file = "TMY-Colorad-v5.0.epw"
   elevation = 6145 # elevation required by Section 7.2.1.7
+  heat_power = 3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
+  cool_power = 0 # No cooling, required by Section 7.2.1.14.1
 else
   weather_file = "TMY-Lasvega-v5.0.epw"
   elevation = 2178 # elevation required by Section 7.2.1.7
+  heat_power = 0 # No heating, required by Section 7.2.1.14.1
+  cool_power = 3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
 end
 
 %>
@@ -320,10 +324,10 @@ ZONE "Main Zone"
   znVol = <%= zone_vol_cond %>
   znCAir = <%= 0.24*0.077*zone_vol_cond %>
 <% if !ff %>
-  znTH = select( $hour == 8, <%= c_f(heat_sb) %> + ($subhour/<%= nsteps %>.0)*<%= c_f(heat_sp) - c_f(heat_sb) %> , $hour > 8 && $hour <= 23, <%= c_f(heat_sp) %>, default <%= c_f(heat_sb) %>)
-  znQMxH = <%= 1000000*w_btu %>
-  znTC = <%= c_f(cool_sp) %>
-  znQMxC = <%= -1000000*w_btu %>
+  znTH = <%= heat_sp %>
+  znQMxH = <%= heat_power %>
+  znTC = <%= cool_sp %>
+  znQMxC = <%= cool_power %>
 <% end %>
   znHcAirX = 0.0 // Remove +4.8 ACH assumed for non-RSYS zones
   infAC = <%= ach %>
