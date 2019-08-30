@@ -26,6 +26,8 @@
   parameter "opaque", :default=>false
   parameter "h_ext", :default=>nil
   parameter "h_int", :default=>nil
+  parameter "framing_factor_walls", :default=>0.25 # Note 3 in Table 7.1 specifies 0.25 framing factor for exterior walls
+  parameter "framing_factor_other", :default=>0.1 # Note 5 in Table 7.1 specifies 0.1 framing factor for ceiling and floor
 %>
 
 <%
@@ -87,12 +89,12 @@ MATERIAL "Plasterboard"       // 0.5-in. thickness
   matSpHt = 0.26               // Specific heat of material, Btu/lb-F
   matDens = 50.0               // Density, lb/ft3
 
-MATERIAL "Fiberglass Batt"       // 3.5-in. thickness
+MATERIAL "R-11 Fiberglass Batt"       // 3.5-in. thickness
   matCond = 0.0265             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
   matSpHt = 0.20               // Specific heat of material, Btu/lb-F
   matDens = 0.6               // Density, lb/ft3
 
-MATERIAL "Frame 2x4 16-in. O.C."       // 3.5-in. thickness
+MATERIAL "Wood Framing"       // 3.5-in. and 5.5-in. thickness
   matCond = 0.0667             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
   matSpHt = 0.33               // Specific heat of material, Btu/lb-F
   matDens = 32.0               // Density, lb/ft3
@@ -112,6 +114,18 @@ MATERIAL "Solid Core Door"       // 1.75-in. thickness
   matSpHt = 0.33               // Specific heat of material, Btu/lb-F
   matDens = 32.0               // Density, lb/ft3
 
+// Material properties for L120A exterior walls and doors from Table 7-16 in ASHRAE Standard 140-2011
+
+MATERIAL "R-18 Fiberglass Batt"       // 5.5-in. thickness
+  matCond = 0.0255             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.20               // Specific heat of material, Btu/lb-F
+  matDens = 0.68               // Density, lb/ft3
+
+MATERIAL "Polyisocyanurate board insulation"       // 1-in. thickness
+  matCond = 0.0116             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.22               // Specific heat of material, Btu/lb-F
+  matDens = 2.0               // Density, lb/ft3
+
 // Material properties for raised floor exposed to air from Table 7-5 in ASHRAE Standard 140-2011
 
 MATERIAL "Carpet with Fibrous Pad"
@@ -130,7 +144,7 @@ MATERIAL "Joists 2x8 16-in. O.C."       // 3.5-in. thickness
 
 // Material properties for ceiling, attic gable walls, and roof from Table 7-6 in ASHRAE Standard 140-2011
 
-MATERIAL "Fiberglass Batt - Ceiling"       // 6.25-in. thickness
+MATERIAL "R-19 Fiberglass Batt - Ceiling"       // 6.25-in. thickness
   matCond = 0.0274             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
   matSpHt = 0.20               // Specific heat of material, Btu/lb-F
   matDens = 0.6               // Density, lb/ft3
@@ -144,6 +158,13 @@ MATERIAL "Asphalt Shingle"       // 0.25-in. thickness
   matCond = 0.0473             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
   matSpHt = 0.30               // Specific heat of material, Btu/lb-F
   matDens = 70.0               // Density, lb/ft3
+
+// Material properties for L120A ceiling from Table 7-17 in ASHRAE Standard 140-2011
+
+MATERIAL "R-38 Fiberglass Batt - Ceiling"       // 12-in. thickness
+  matCond = 0.0263             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = 0.20               // Specific heat of material, Btu/lb-F
+  matDens = 0.6               // Density, lb/ft3
 
 // Material properties for interior wall air gap from air properties at 1atm and 75F
 
@@ -177,14 +198,24 @@ CONSTRUCTION "Opaque Window"
 
 CONSTRUCTION "Exterior Wall - Frame"    // Assembly for portion of exterior walls that contain framing
   LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
-  LAYER lrMat="Frame 2x4 16-in. O.C." lrThk= (3.50 / 12.00)
+  <% if case_name.include?("L120A") %>
+  LAYER lrMat="Wood Framing" lrThk= (5.50 / 12.00)
+  LAYER lrMat="Polyisocyanurate board insulation" lrThk= (1.0 / 12.00)
+  <% else %>
+  LAYER lrMat="Wood Framing" lrThk= (3.50 / 12.00)
   LAYER lrMat="Fiberboard Sheathing" lrThk= (0.50 / 12.00)
+  <% end %>
   LAYER lrMat="Hardboard Siding" lrThk= (7.00 / (16.00 * 12.00 ) )
 
 CONSTRUCTION "Exterior Wall - Cavity"    // Assembly for portion of exterior walls that contain cavity between framing
   LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
-  LAYER lrMat="Fiberglass Batt" lrThk= (3.50 / 12.00)
+  <% if case_name.include?("L120A") %>
+  LAYER lrMat="R-18 Fiberglass Batt" lrThk= (5.50 / 12.00)
+  LAYER lrMat="Polyisocyanurate board insulation" lrThk= (1.0 / 12.00)
+  <% else %>
+  LAYER lrMat="R-11 Fiberglass Batt" lrThk= (3.50 / 12.00)
   LAYER lrMat="Fiberboard Sheathing" lrThk= (0.50 / 12.00)
+  <% end %>
   LAYER lrMat="Hardboard Siding" lrThk= (7.00 / (16.00 * 12.00 ) )
 
 CONSTRUCTION "Door"
@@ -211,14 +242,20 @@ CONSTRUCTION "Gable Wall"
 CONSTRUCTION "Ceiling - Frame"    // Assembly for portion of ceilings that contain framing
   LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
   LAYER lrMat="Joists 2x6 24-in. O.C." lrThk= (5.50 / 12.00)
+  <% if case_name.include?("L120A") %>
+  LAYER lrMat="R-38 Fiberglass Batt - Ceiling" lrThk= (12.00 / 12.00)
+  <% end %>
 
 CONSTRUCTION "Ceiling - Cavity"    // Assembly for portion of ceilings that contain cavity between framing
   LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
-  LAYER lrMat="Fiberglass Batt - Ceiling" lrThk= (6.25 / 12.00)
+  LAYER lrMat="R-19 Fiberglass Batt - Ceiling" lrThk= (6.25 / 12.00)
+  <% if case_name.include?("L120A") %>
+  LAYER lrMat="R-38 Fiberglass Batt - Ceiling" lrThk= (12.00 / 12.00)
+  <% end %>
 
 CONSTRUCTION "Interior Wall - Frame"    // Assembly for portion of interior walls that contain framing
   LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
-  LAYER lrMat="Frame 2x4 16-in. O.C." lrThk= (3.50 / 12.00)
+  LAYER lrMat="Wood Framing" lrThk= (3.50 / 12.00)
   LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
 
 CONSTRUCTION "Interior Wall - Cavity"    // Assembly for portion of interior walls that contain cavity between framing
@@ -348,18 +385,16 @@ ZONE "Main Zone"
 <%
 # Surfaces in Conditioned Main Zone
 # Constructions for exterior walls, ceiling, and raised floor include wood framing
-# Note 3 in Table 7.1 specifies 0.25 framing factor for exterior walls
-# Note 5 in Table 7.1 specifies 0.1 framing factor for ceiling and floor
 
 surfaces_cond = [
-  {:name=>"North Wall",:type=>"Wall",:area=>width*height_cond,:azm=>0,:windows=>north_south_windows,:framing_factor=>0.25,:doors=>1},
-  {:name=>"East Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>90,:windows=>east_west_windows,:framing_factor=>0.25,:doors=>0},
-  {:name=>"South Wall",:type=>"Wall",:area=>width*height_cond,:azm=>180,:windows=>north_south_windows,:framing_factor=>0.25,:doors=>1},
-  {:name=>"West Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>270,:windows=>east_west_windows,:framing_factor=>0.25,:doors=>0},
-  {:name=>"Ceiling",:type=>"Ceiling",:area=>floor_area,:windows=>0,:framing_factor=>0.1,:doors=>0},
-  {:name=>"Floor",:type=>"Floor",:area=>floor_area,:windows=>0,:framing_factor=>0.1,:doors=>0},
-  {:name=>"North-South Interior Wall",:type=>"Wall",:area=>632,:azm=>90,:windows=>0,:framing_factor=>0.1,:doors=>0},
-  {:name=>"East-West Interior Wall",:type=>"Wall",:area=>392,:azm=>0,:windows=>0,:framing_factor=>0.1,:doors=>0}
+  {:name=>"North Wall",:type=>"Wall",:area=>width*height_cond,:azm=>0,:windows=>north_south_windows,:framing_factor=>framing_factor_walls,:doors=>1},
+  {:name=>"East Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>90,:windows=>east_west_windows,:framing_factor=>framing_factor_walls,:doors=>0},
+  {:name=>"South Wall",:type=>"Wall",:area=>width*height_cond,:azm=>180,:windows=>north_south_windows,:framing_factor=>framing_factor_walls,:doors=>1},
+  {:name=>"West Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>270,:windows=>east_west_windows,:framing_factor=>framing_factor_walls,:doors=>0},
+  {:name=>"Ceiling",:type=>"Ceiling",:area=>floor_area,:windows=>0,:framing_factor=>framing_factor_other,:doors=>0},
+  {:name=>"Floor",:type=>"Floor",:area=>floor_area,:windows=>0,:framing_factor=>framing_factor_other,:doors=>0},
+  {:name=>"North-South Interior Wall",:type=>"Wall",:area=>632,:azm=>90,:windows=>0,:framing_factor=>framing_factor_other,:doors=>0},
+  {:name=>"East-West Interior Wall",:type=>"Wall",:area=>392,:azm=>0,:windows=>0,:framing_factor=>framing_factor_other,:doors=>0}
 ]
 windows = []
 window_area = 0.0
