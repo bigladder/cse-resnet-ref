@@ -1,8 +1,10 @@
 <%#INTERFACE
   parameter "case_name"
   parameter "weather"
-  parameter "north_south_windows", :default=>6
-  parameter "east_west_windows", :default=>3
+  parameter "north_windows", :default=>6 # number of windows in North exterior wall
+  parameter "south_windows", :default=>6 # number of windows in South exterior wall
+  parameter "east_windows", :default=>3 # number of windows in East exterior wall
+  parameter "west_windows", :default=>3 # number of windows in West exterior wall
   parameter "overhangs", :default=>false
   parameter "fins", :default=>false
   parameter "construction_mass", :default=>"LOW" # LOW | LOW-EFF | HIGH
@@ -387,10 +389,10 @@ ZONE "Main Zone"
 # Constructions for exterior walls, ceiling, and raised floor include wood framing
 
 surfaces_cond = [
-  {:name=>"North Wall",:type=>"Wall",:area=>width*height_cond,:azm=>0,:windows=>north_south_windows,:framing_factor=>framing_factor_walls,:doors=>1},
-  {:name=>"East Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>90,:windows=>east_west_windows,:framing_factor=>framing_factor_walls,:doors=>0},
-  {:name=>"South Wall",:type=>"Wall",:area=>width*height_cond,:azm=>180,:windows=>north_south_windows,:framing_factor=>framing_factor_walls,:doors=>1},
-  {:name=>"West Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>270,:windows=>east_west_windows,:framing_factor=>framing_factor_walls,:doors=>0},
+  {:name=>"North Wall",:type=>"Wall",:area=>width*height_cond,:azm=>0,:windows=>north_windows,:framing_factor=>framing_factor_walls,:doors=>1},
+  {:name=>"East Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>90,:windows=>east_windows,:framing_factor=>framing_factor_walls,:doors=>0},
+  {:name=>"South Wall",:type=>"Wall",:area=>width*height_cond,:azm=>180,:windows=>south_windows,:framing_factor=>framing_factor_walls,:doors=>1},
+  {:name=>"West Wall",:type=>"Wall",:area=>depth*height_cond,:azm=>270,:windows=>west_windows,:framing_factor=>framing_factor_walls,:doors=>0},
   {:name=>"Ceiling",:type=>"Ceiling",:area=>floor_area,:windows=>0,:framing_factor=>framing_factor_other,:doors=>0},
   {:name=>"Floor",:type=>"Floor",:area=>floor_area,:windows=>0,:framing_factor=>framing_factor_other,:doors=>0},
   {:name=>"North-South Interior Wall",:type=>"Wall",:area=>632,:azm=>90,:windows=>0,:framing_factor=>framing_factor_other,:doors=>0},
