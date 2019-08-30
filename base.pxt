@@ -229,7 +229,7 @@ CONSTRUCTION "Raised Floor - Frame"    // Assembly for portion of raised floors 
 CONSTRUCTION "Raised Floor - Cavity"    // Assembly for portion of raised floors that contain cavity between framing
   LAYER lrMat="Carpet with Fibrous Pad" lrThk= (0.5 / 12.00) // No thickness specified in Table 7-5, assumed carpet pad is 0.5" thick
   LAYER lrMat="Plywood" lrThk= (0.75 / 12.0)
-  LAYER lrMat="Fiberglass Batt" lrThk= (3.50 / 12.00)
+  LAYER lrMat="R-11 Fiberglass Batt" lrThk= (3.50 / 12.00)
 
 CONSTRUCTION "Roof"
   LAYER lrMat="Plywood" lrThk= (0.50 / 12.00)
