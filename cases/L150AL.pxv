@@ -1,0 +1,6 @@
+:case_name=>"L150AL",
+:weather=>"L",
+:north_windows=>0,
+:south_windows=>12,
+:east_windows=>0,
+:west_windows=>0
