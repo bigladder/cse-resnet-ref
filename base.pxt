@@ -374,6 +374,7 @@ ZONE "Main Zone"
   znCeilingHt = <%= height_cond %>
   znEaveZ = <%= height_cond %>
 
+<% if !case_name.include?("L170A") %>
   GAIN "Internal Sensible Gain"
     gnPower = hourval(1139, 1139, 1139, 1139, 1139, 1903, 2391, 4782, 2790, 1707, 1707, 2277, 1707, 1424, 1480, 1480, 2164, 2334, 2505, 3928, 3928, 4101, 4101, 3701) // Hourly sensible loads in Btu
     gnFrRad = 0.7
@@ -383,6 +384,7 @@ ZONE "Main Zone"
     gnPower = hourval(247, 247, 247, 247, 247, 412, 518, 1036, 604, 370, 370, 493, 370, 308, 321, 321, 469, 506, 543, 851, 851, 888, 888, 802) // Hourly latent loads in Btu
     gnFrRad = 0
     gnFrLat = 1
+<% end %>
 
 <%
 # Surfaces in Conditioned Main Zone
@@ -938,10 +940,12 @@ EXPORT
   EXPORTCOL colHead="Month" colVal=$month
   EXPORTCOL colHead="Day" colVal=$dayOfMonth
   EXPORTCOL colHead="Hour" colVal=$hour
+<% if !case_name.include?("L170A") %>
   EXPORTCOL colHead="Main Zone Convective Sensible Gain [Btu]" colVal=@zone["Main Zone"].znSGain
   EXPORTCOL colHead="Main Zone Radiative Sensible Gain [Btu]" colVal=@gain["Internal Sensible Gain"].gnPower * @gain["Internal Sensible Gain"].gnFrRad
   EXPORTCOL colHead="Main Zone Sensible Gain [Btu]" colVal=@gain["Internal Sensible Gain"].gnPower
   EXPORTCOL colHead="Main Zone Latent Gain [Btu]" colVal=@zone["Main Zone"].znLGain
+<% end %>
 
 EXPORTFILE "Infiltration"
   xfFileName = "Infiltration.csv"
