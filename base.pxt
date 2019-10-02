@@ -214,6 +214,9 @@ CONSTRUCTION "Exterior Wall - Cavity"    // Assembly for portion of exterior wal
   <% if case_name.include?("L120A") %>
   LAYER lrMat="R-18 Fiberglass Batt" lrThk= (5.50 / 12.00)
   LAYER lrMat="Polyisocyanurate board insulation" lrThk= (1.0 / 12.00)
+  <% elsif case_name.include?("L200A") %>
+  LAYER lrMat="Air Gap" lrThk= (3.50 / 12.00)
+  LAYER lrMat="Fiberboard Sheathing" lrThk= (0.50 / 12.00)
   <% else %>
   LAYER lrMat="R-11 Fiberglass Batt" lrThk= (3.50 / 12.00)
   LAYER lrMat="Fiberboard Sheathing" lrThk= (0.50 / 12.00)
@@ -231,7 +234,9 @@ CONSTRUCTION "Raised Floor - Frame"    // Assembly for portion of raised floors 
 CONSTRUCTION "Raised Floor - Cavity"    // Assembly for portion of raised floors that contain cavity between framing
   LAYER lrMat="Carpet with Fibrous Pad" lrThk= (0.5 / 12.00) // No thickness specified in Table 7-5, assumed carpet pad is 0.5" thick
   LAYER lrMat="Plywood" lrThk= (0.75 / 12.0)
+  <% if !case_name.include?("L200A") %>
   LAYER lrMat="R-11 Fiberglass Batt" lrThk= (3.50 / 12.00)
+  <% end %>
 
 CONSTRUCTION "Roof"
   LAYER lrMat="Plywood" lrThk= (0.50 / 12.00)
@@ -250,7 +255,11 @@ CONSTRUCTION "Ceiling - Frame"    // Assembly for portion of ceilings that conta
 
 CONSTRUCTION "Ceiling - Cavity"    // Assembly for portion of ceilings that contain cavity between framing
   LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
+  <% if !case_name.include?("L200A") %>
   LAYER lrMat="R-19 Fiberglass Batt - Ceiling" lrThk= (6.25 / 12.00)
+  <% else %>
+  LAYER lrMat="R-11 Fiberglass Batt" lrThk= (3.50 / 12.00)
+  <% end %>
   <% if case_name.include?("L120A") %>
   LAYER lrMat="R-38 Fiberglass Batt - Ceiling" lrThk= (12.00 / 12.00)
   <% end %>
