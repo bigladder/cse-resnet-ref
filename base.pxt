@@ -1146,7 +1146,6 @@ EXPORT
   EXPORTCOL colHead="Fraction Convective Heating [-]" colVal=@zone["Main Zone"].fConvH
   EXPORTCOL colHead="Fraction Convective Cooling [-]" colVal=@zone["Main Zone"].fConvC
 
-/*
 EXPORTFILE "Results"
   xfFileName = "..\\Results.csv"
   xfFileStat = APPEND
@@ -1161,19 +1160,20 @@ EXPORT
   EXPORTCOL colHead="Case" colVal="<%= case_name %>"
 
   // Heating
-  EXPORTCOL colHead="Annual Heating [MWh]" colVal=@znRes["Main Zone"].Y.qhMech*<%= 1/(1000000*w_btu) %>
-  EXPORTCOL colHead="Peak Heating [kW]" colVal=@Top.qhPeak*<%= 1/(1000*w_btu) %>
+  EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qhMech/1000000
+  EXPORTCOL colHead="Peak Heating [10^3 Btu/hr]" colVal=@Top.qhPeak/1000
   EXPORTCOL colHead="Peak Heating [Month]" colVal=@Top.qhPeakM
   EXPORTCOL colHead="Peak Heating [Day]" colVal=@Top.qhPeakD
   EXPORTCOL colHead="Peak Heating [Hour]" colVal=@Top.qhPeakH
 
   // Cooling
-  EXPORTCOL colHead="Annual Cooling [MWh]" colVal=@znRes["Main Zone"].Y.qcMech*<%= -1/(1000000*w_btu) %>
-  EXPORTCOL colHead="Peak Cooling [kW]" colVal=@Top.qcPeak*<%= -1/(1000*w_btu) %>
+  EXPORTCOL colHead="Annual Cooling [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qcMech/-1000000
+  EXPORTCOL colHead="Peak Cooling [10^3 Btu/hr]" colVal=@Top.qcPeak/-1000
   EXPORTCOL colHead="Peak Cooling [Month]" colVal=@Top.qcPeakM
   EXPORTCOL colHead="Peak Cooling [Day]" colVal=@Top.qcPeakD
   EXPORTCOL colHead="Peak Cooling [Hour]" colVal=@Top.qcPeakH
 
   DELETE EXPORTFILE Primary
+/*
 */
 RUN
