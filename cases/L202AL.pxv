@@ -1,0 +1,4 @@
+:case_name=>"L200AL",
+:weather=>"L",
+:ach=>1.5,
+:ext_sol_abs_exposed=>0.2

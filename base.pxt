@@ -9,7 +9,8 @@
   parameter "fins", :default=>false
   parameter "construction_mass", :default=>"LOW" # LOW | LOW-EFF | HIGH
   parameter "orientation", :default=>0.0
-  parameter "ext_sol_abs", :default=>0.6
+  parameter "ext_sol_abs", :default=>0.6 # applied to exterior face of interior surfaces (interior walls, e.g.)
+  parameter "ext_sol_abs_exposed", :default=>0.6 # applied to exterior face of exposed surfaces (exterior walls, roofs, end gables, doors)
   parameter "int_sol_abs", :default=>0.6
   parameter "ext_lw_abs", :default=>0.9
   parameter "int_lw_abs", :default=>0.9
@@ -214,7 +215,7 @@ CONSTRUCTION "Exterior Wall - Cavity"    // Assembly for portion of exterior wal
   <% if case_name.include?("L120A") %>
   LAYER lrMat="R-18 Fiberglass Batt" lrThk= (5.50 / 12.00)
   LAYER lrMat="Polyisocyanurate board insulation" lrThk= (1.0 / 12.00)
-  <% elsif case_name.include?("L200A") %>
+  <% elsif (case_name.include?("L200A") || case_name.include?("L202A")) %>
   LAYER lrMat="Air Gap" lrThk= (3.50 / 12.00)
   LAYER lrMat="Fiberboard Sheathing" lrThk= (0.50 / 12.00)
   <% else %>
@@ -234,7 +235,7 @@ CONSTRUCTION "Raised Floor - Frame"    // Assembly for portion of raised floors 
 CONSTRUCTION "Raised Floor - Cavity"    // Assembly for portion of raised floors that contain cavity between framing
   LAYER lrMat="Carpet with Fibrous Pad" lrThk= (0.5 / 12.00) // No thickness specified in Table 7-5, assumed carpet pad is 0.5" thick
   LAYER lrMat="Plywood" lrThk= (0.75 / 12.0)
-  <% if !case_name.include?("L200A") %>
+  <% if !(case_name.include?("L200A") || case_name.include?("L202A")) %>
   LAYER lrMat="R-11 Fiberglass Batt" lrThk= (3.50 / 12.00)
   <% end %>
 
@@ -255,7 +256,7 @@ CONSTRUCTION "Ceiling - Frame"    // Assembly for portion of ceilings that conta
 
 CONSTRUCTION "Ceiling - Cavity"    // Assembly for portion of ceilings that contain cavity between framing
   LAYER lrMat="Plasterboard" lrThk= (0.50 / 12.00)
-  <% if !case_name.include?("L200A") %>
+  <% if !(case_name.include?("L200A") || case_name.include?("L202A")) %>
   LAYER lrMat="R-19 Fiberglass Batt - Ceiling" lrThk= (6.25 / 12.00)
   <% else %>
   LAYER lrMat="R-11 Fiberglass Batt" lrThk= (3.50 / 12.00)
@@ -422,12 +423,13 @@ window_area = 0.0
     sfCon = "Interior Wall - Frame"
     sfExCnd = ADJZN
     sfAdjZn = "Main Zone"
+    sfExAbs = <%= ext_sol_abs %>
     <% else %>
     sfCon = "Exterior Wall - Frame"
     sfExCnd = Ambient
+    sfExAbs = <%= ext_sol_abs_exposed %>
     <% end %>
     sfAzm = <%= surface[:azm] %>
-    sfExAbs = <%= ext_sol_abs %>
   <% elsif surface[:type] == "Ceiling" %>
     <% sym = :ceiling %>
     sfType = Ceiling
@@ -490,12 +492,13 @@ window_area = 0.0
     sfCon = "Interior Wall - Cavity"
     sfExCnd = ADJZN
     sfAdjZn = "Main Zone"
+    sfExAbs = <%= ext_sol_abs %>
     <% else %>
     sfCon = "Exterior Wall - Cavity"
     sfExCnd = Ambient
+    sfExAbs = <%= ext_sol_abs_exposed %>
     <% end %>
     sfAzm = <%= surface[:azm] %>
-    sfExAbs = <%= ext_sol_abs %>
   <% elsif surface[:type] == "Ceiling" %>
     <% sym = :ceiling %>
     sfType = Ceiling
@@ -559,7 +562,7 @@ window_area = 0.0
       drModel = forward_difference
       drExRf = 1.67
       drCon = "Door"
-      drExAbs = <%= ext_sol_abs %>
+      drExAbs = <%= ext_sol_abs_exposed %>
       drInAbs = <%= int_sol_abs %>
       drExEpsLW = <%= ext_lw_abs %>
       drInEpsLW = <%= int_lw_abs %>
@@ -629,7 +632,7 @@ window_area = 0.0
       drModel = forward_difference
       drExRf = 1.0
       drCon = "Opaque Window"
-      drExAbs = <%= ext_sol_abs %>
+      drExAbs = <%= ext_sol_abs_exposed %>
       drInAbs = <%= int_sol_abs %>
       drExEpsLW = <%= ext_lw_abs %>
       drInEpsLW = <%= int_lw_abs %>
@@ -673,7 +676,7 @@ surfaces_attic = [
     sfArea = <%= surface[:area] %>
     sfExCnd = Ambient
     sfModel = forward_difference
-    sfExAbs = <%= ext_sol_abs %>
+    sfExAbs = <%= ext_sol_abs_exposed %>
     sfInAbs = <%= int_sol_abs %>
     sfExEpsLW = <%= ext_lw_abs %>
     sfInEpsLW = <%= int_lw_abs %>
