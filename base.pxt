@@ -18,6 +18,7 @@
   parameter "win_u", :default=>1.039 # Btu/hr-ft2-F
   parameter "win_shgc", :default=>0.670
   parameter "win_panes", :default=>1
+  parameter "win_frame_mult", :default=>10.96/15 # net glass area divided by gross assembly area
   parameter "ach", :default=>0.67
   parameter "ach_attic", :default=>2.4
   parameter "heat_sp", :default=>68 # F
@@ -588,6 +589,7 @@ window_area = 0.0
       wnDirtLoss = 0
       wnExShd = NONE
       wnINShd = NONE
+      wnFMult = <%= win_frame_mult %>
       <% if h_ext %>
       wnExHcModel = INPUT
       wnExHcMult = <%= h_ext[:window]*u_c %>
@@ -782,6 +784,7 @@ ZONE "Sun Zone"
       wnDirtLoss = 0
       wnExShd = NONE
       wnINShd = NONE
+      wnFMult = <%= win_frame_mult %>
       <% windows << window_name %>
       <% if overhangs or fins %>
       SHADE
