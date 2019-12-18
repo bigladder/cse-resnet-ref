@@ -1179,6 +1179,39 @@ EXPORT
   EXPORTCOL colHead="Peak Cooling [Day]" colVal=@Top.qcPeakD
   EXPORTCOL colHead="Peak Cooling [Hour]" colVal=@Top.qcPeakH
 
+EXPORTFILE "Main Zone Load Components"
+  xfFileName = "Main Zone Load Components.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Main Zone Load Components"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exType = UDT
+  exFreq = HOUR
+  exDayBeg = JAN 1
+  exDayEnd = DEC 31
+
+  EXPORTCOL colHead="Month" colVal=$month
+  EXPORTCOL colHead="Day" colVal=$dayOfMonth
+  EXPORTCOL colHead="Hour" colVal=$hour
+
+  EXPORTCOL colHead="Conduction [Btu/hr]" colVal=@znRes["Main Zone"].S.qCond
+  EXPORTCOL colHead="Infiltration - Sensible [Btu/hr]" colVal=@znres["Main Zone"].S.qsInfil
+  EXPORTCOL colHead="Internal Mass [Btu/hr]" colVal=@znres["Main Zone"].S.qMass
+  EXPORTCOL colHead="Internal Gains - Sensible [Btu/hr]" colVal=@znres["Main Zone"].S.qsIg
+  EXPORTCOL colHead="Solar [Btu/hr]" colVal=@znres["Main Zone"].S.qSlr
+  EXPORTCOL colHead="Interzone - Sensible [Btu/hr]" colVal=@znres["Main Zone"].S.qsIz
+  EXPORTCOL colHead="Mechanical Ventilation - Sensible [Btu/hr]" colVal=@znres["Main Zone"].S.qsMech
+  EXPORTCOL colHead="Sensible Balance [Btu/hr]" colVal=@znres["Main Zone"].S.qsBal
+
+  EXPORTCOL colHead="Infiltration - Latent [Btu/hr]" colVal=@znres["Main Zone"].S.qlInfil
+  EXPORTCOL colHead="Internal Gains - Latent [Btu/hr]" colVal=@znres["Main Zone"].S.qlIg
+  EXPORTCOL colHead="Interzone - Latent [Btu/hr]" colVal=@znres["Main Zone"].S.qlIz
+  EXPORTCOL colHead="Air - Latent [Btu/hr]" colVal=@znres["Main Zone"].S.qlAir
+  EXPORTCOL colHead="Mechanical Ventilation - Latent [Btu/hr]" colVal=@znres["Main Zone"].S.qlMech
+  EXPORTCOL colHead="Latent Balance [Btu/hr]" colVal=@znres["Main Zone"].S.qlBal
+
   DELETE EXPORTFILE Primary
 /*
 */
