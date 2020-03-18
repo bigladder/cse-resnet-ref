@@ -40,7 +40,7 @@ def sim(c)
   if !(FileUtils.uptodate?(target[0], src)) or !(FileUtils.uptodate?(target[1], src))
     puts "\nsimulating..."
     Dir.chdir(output_dir){
-      success = system(%Q|..\\..\\CSE.exe in.cse|)
+      success = system(%Q|..\\..\\CSE.exe -b -n in.cse|)
     }
     puts "\n"
   else

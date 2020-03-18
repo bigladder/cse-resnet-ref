@@ -1,2 +1,3 @@
 :case_name=>"L170AL",
-:weather=>"L"
+:weather=>"L",
+:has_int_gains=>false
