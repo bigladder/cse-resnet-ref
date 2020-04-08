@@ -101,6 +101,11 @@ MATERIAL "Wood Framing"       // 3.5-in. and 5.5-in. thickness
   matSpHt = 0.33               // Specific heat of material, Btu/lb-F
   matDens = 32.0               // Density, lb/ft3
 
+MATERIAL "R-11 Fiberglass Batt, 16 in o.c."       // 3.5-in. thickness
+  matCond = <%= 0.0265*(1.0 - 1.5/16.0) + 0.0667*(1.5/16.0) %>          // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+  matSpHt = <%= (0.2*0.6*(1.0 - 1.5/16.0) + 0.33*32.0*(1.5/16.0))/( 0.6*(1.0 - 1.5/16.0) + 32.0*(1.5/16.0)) %>               // Specific heat of material, Btu/lb-F
+  matDens = <%= 0.6*(1.0 - 1.5/16.0) + 32.0*(1.5/16.0) %>               // Density, lb/ft3
+
 MATERIAL "Fiberboard Sheathing"       // 0.5-in. thickness
   matCond = 0.0316             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
   matSpHt = 0.31               // Specific heat of material, Btu/lb-F
@@ -202,7 +207,11 @@ CONSTRUCTION "Door"
 CONSTRUCTION "Raised Floor - Frame"    // Assembly for portion of raised floors that contain framing
   LAYER lrMat="Carpet with Fibrous Pad" lrThk= (0.5 / 12.00) // No thickness specified in Table 7-5, assumed carpet pad is 0.5" thick
   LAYER lrMat="Plywood" lrThk= (0.75 / 12.00)
-  LAYER lrMat="Wood Framing" lrThk= (3.50 / 12.00)
+  <% if foundation_type != "BASEMENT" %>
+  LAYER lrMat="R-11 Fiberglass Batt" lrThk= (3.50 / 12.00)
+  <% else %>
+  LAYER lrMat="R-11 Fiberglass Batt" lrThk= (7.25 / 12.00)
+  <% end %>
 
 CONSTRUCTION "Raised Floor - Cavity"    // Assembly for portion of raised floors that contain cavity between framing
   LAYER lrMat="Carpet with Fibrous Pad" lrThk= (0.5 / 12.00) // No thickness specified in Table 7-5, assumed carpet pad is 0.5" thick
@@ -284,6 +293,10 @@ CONSTRUCTION "Rim Joist"
   LAYER lrMat="Wood Framing" lrThk= 0'1.5
   LAYER lrMat="Fiberboard Sheathing" lrThk= 0'0.5
   LAYER lrMat="Hardboard Siding" lrThk= (7.00 / (16.00 * 12.00 ) )
+  <% if foundation_insulated %>
+  LAYER lrMat="R-11 Fiberglass Batt" lrThk= 0'3.5
+  <% end %>
+
 
 CONSTRUCTION "Sill Plate"
   LAYER lrMat="Wood Framing" lrThk= 0'3.5
@@ -298,12 +311,17 @@ FOUNDATION "Basement Foundation"
   fdWlDpBlwSlb=0
 
   <% if foundation_insulated %>
-  FNDBLOCK "Exterior Vertical Insulation"
-    fbMat="Slab Insulation"
-    fbX1Ref=WALLEXT
-    fbX2Ref=WALLEXT
-    fbX2=0'1
-    fbZ2=2'6
+  FNDBLOCK "Interior Vertical Insulation"
+    fbMat="R-11 Fiberglass Batt, 16 in o.c."
+    fbZ2Ref=SLABTOP
+    fbX2=-0'3.5
+
+  FNDBLOCK "Interior Vertical Plasterboard"
+    fbMat="Plasterboard"
+    fbZ2Ref=SLABTOP
+    fbX1=-0'3.5
+    fbX2=-0'4
+
   <% end %>
 <% end %>
 
