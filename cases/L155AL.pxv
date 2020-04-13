@@ -1,5 +1,5 @@
 :case_name=>"L155AL",
-:weather=>"L",
+:climate=>"COOLING",
 :north_windows=>0,
 :south_windows=>18,
 :east_windows=>0,

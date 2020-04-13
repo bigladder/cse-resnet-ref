@@ -1,5 +1,5 @@
 :case_name=>"L200AL",
-:weather=>"L",
+:climate=>"COOLING",
 :ach=>1.5,
 :ext_sol_abs_exposed=>0.2,
 :envelope_eff=>"LOW"

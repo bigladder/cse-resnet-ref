@@ -1,3 +1,3 @@
 :case_name=>"L302AC",
-:weather=>"C",
+:climate=>"HEATING",
 :foundation_type=>"SLAB"

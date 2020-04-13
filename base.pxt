@@ -1,6 +1,6 @@
 <%#INTERFACE
   parameter "case_name"
-  parameter "weather"
+  parameter "climate"
   parameter "north_windows", :default=>6 # number of windows in North exterior wall
   parameter "south_windows", :default=>6 # number of windows in South exterior wall
   parameter "east_windows", :default=>3 # number of windows in East exterior wall
@@ -40,10 +40,12 @@ m_ft = 3.28084
 m2_ft2 = m_ft*m_ft
 m3_ft3 = m2_ft2*m_ft
 h_min = 60.0
+h_s = 3600.0
 k_c = 0.5781759824
 rho_c = 0.062428
 cp_c = 0.000239
 w_btu = 3.412
+btu_j = h_s/w_btu
 k_r = 9/5.0
 q_c = w_btu/m2_ft2
 u_c = q_c/k_r
@@ -56,12 +58,12 @@ end
 nsteps = 1
 
 # weather file
-if weather == "C"
+if climate == "HEATING"
   weather_file = "TMY-Colorad-v5.0.epw"
   elevation = 6145 # elevation required by Section 7.2.1.7
   heat_power = 3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
   cool_power = 0 # No cooling, required by Section 7.2.1.14.1
-else
+elsif climate == "COOLING"
   weather_file = "TMY-Lasvega-v5.0.epw"
   elevation = 2178 # elevation required by Section 7.2.1.7
   heat_power = 0 # No heating, required by Section 7.2.1.14.1
@@ -681,24 +683,6 @@ ZONE "Basement Zone"
   <% end %>
 <% end %>
 
-
-
-<% if vent_fan %>
-IZXFER "Ventilation Fan"
-  izNVType = AIRNETEXTFLOW
-  izZn1 = "Main Zone"
-  izVfMin = select( $hour > 7 && $hour <= 18, 0.0, default <%= 1700*m3_ft3/h_min %>)
-
-IZXFER "Exfiltration"
-  izNVType = AIRNETEXT
-  izZn1 = "Main Zone"
-  izALo = select( $hour > 7 && $hour <= 18, 0.0, default 100)
-
-ALTER ZONE "Main Zone"
-  znQMxH = 0.0
-  znQMxC = select( $hour > 7 && $hour <= 18, <%= -1000000*w_btu %>, default 0.0)
-  <% end %>
-
 // Output
 DELETE REPORT EB
 DELETE REPORT INP
@@ -727,17 +711,17 @@ EXPORT
   EXPORTCOL colHead="Main Zone Heating SP [C]" colVal=(@zone["Main Zone"].znTH - 32)*<%= 1/k_r %>
   EXPORTCOL colHead="Main Zone Cooling SP [C]" colVal=(@zone["Main Zone"].znTC - 32)*<%= 1/k_r %>
   // Heating
-  EXPORTCOL colHead="Main Heating Load [Wh]" colVal=@znRes["Main Zone"].H.qhMech*<%= 1/w_btu %>
+  EXPORTCOL colHead="Main Heating Load [J]" colVal=@znRes["Main Zone"].H.qhMech*<%= btu_j %>
 
   // Cooling
-  EXPORTCOL colHead="Main Cooling Load [Wh]" colVal=-@znRes["Main Zone"].H.qcMech*<%= 1/w_btu %>
+  EXPORTCOL colHead="Main Cooling Load [J]" colVal=-@znRes["Main Zone"].H.qcMech*<%= btu_j %>
 
-  EXPORTCOL colHead="Main Inf Load [Wh]" colVal=@znRes["Main Zone"].H.qsInfil*<%= 1/w_btu %>
+  EXPORTCOL colHead="Main Inf Load [J]" colVal=@znRes["Main Zone"].H.qsInfil*<%= btu_j %>
 
 
   // Transmitted Solar
 <% if window_area > 0.0 %>
-  EXPORTCOL colHead="Transmitted Solar [Wh/m2]" colVal=@znRes["Main Zone"].H.qSlr*<%= m2_ft2/(w_btu*window_area) %>
+  EXPORTCOL colHead="Transmitted Solar [J]" colVal=@znRes["Main Zone"].H.qSlr*<%= btu_j %>
 <% end %>
 
   EXPORTCOL colHead="Attic Zone Temp [C]" colVal=(@znRes["Attic Zone"].H.tAir - 32)*<%= 1/k_r %>
@@ -748,12 +732,12 @@ EXPORT
   EXPORTCOL colHead="Basement Zone Heating SP [C]" colVal=(@zone["Basement Zone"].znTH - 32)*<%= 1/k_r %>
   EXPORTCOL colHead="Basement Zone Cooling SP [C]" colVal=(@zone["Basement Zone"].znTC - 32)*<%= 1/k_r %>
   // Heating
-  EXPORTCOL colHead="Basement Heating Load [Wh]" colVal=@znRes["Basement Zone"].H.qhMech*<%= 1/w_btu %>
+  EXPORTCOL colHead="Basement Heating Load [J]" colVal=@znRes["Basement Zone"].H.qhMech*<%= btu_j %>
 
   // Cooling
-  EXPORTCOL colHead="Basement Cooling Load [Wh]" colVal=-@znRes["Basement Zone"].H.qcMech*<%= 1/w_btu %>
+  EXPORTCOL colHead="Basement Cooling Load [J]" colVal=-@znRes["Basement Zone"].H.qcMech*<%= btu_j %>
 
-  EXPORTCOL colHead="Basement Inf Load [Wh]" colVal=@znRes["Main Zone"].H.qsInfil*<%= 1/w_btu %>
+  EXPORTCOL colHead="Basement Inf Load [J]" colVal=@znRes["Main Zone"].H.qsInfil*<%= btu_j %>
 
 <% end %>
 
