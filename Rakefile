@@ -1,9 +1,9 @@
 require 'fileutils'
 
-def compose(c)
+def compose(c, tests)
   file_base = File.basename(c,".*")
 
-  output_dir = 'output/' + file_base
+  output_dir = 'output/' + tests + '/' + file_base
   #Create output directory
   unless File.directory?(output_dir)
     FileUtils.mkdir_p(output_dir)
@@ -28,10 +28,10 @@ def compose(c)
   return success
 end
 
-def sim(c)
+def sim(c, tests)
   file_base = File.basename(c,".*")
 
-  output_dir = 'output/' + file_base
+  output_dir = 'output/' + tests + '/' + file_base
 
   src = [output_dir + '/in.cse']
   target = [output_dir + '/in.rep', output_dir + '/DETAILED.csv']
@@ -40,7 +40,7 @@ def sim(c)
   if !(FileUtils.uptodate?(target[0], src)) or !(FileUtils.uptodate?(target[1], src))
     puts "\nsimulating..."
     Dir.chdir(output_dir){
-      success = system(%Q|..\\..\\CSE.exe -b -n in.cse|)
+      success = system(%Q|..\\..\\..\\CSE.exe -b -n in.cse|)
     }
     puts "\n"
   else
@@ -51,14 +51,15 @@ def sim(c)
 end
 
 task :sim, [:filter] do |t, args|
-  args.with_defaults(:filter=>'*')
-  cases = Dir['cases/' + args.filter + '.*']
+  args.with_defaults(:filter=>'section-7')
+  tests = args.fetch(:filter) # 'section-7'
+  cases = Dir['cases/' + tests + '/*.*']
   for c in cases
-    if !compose(c)
+    if !compose(c, tests)
       puts "\nERROR: Composition failed..."
       exit
     end
-    if !sim(c)
+    if !sim(c, tests)
       puts "\nERROR: Simulation failed..."
       exit
     end
@@ -67,10 +68,11 @@ end
 
 task :default, [:filter] => [:sim]
 
-desc "Clean the output directory and results CSVs"
+desc "Clean the output directories"
 task :clean_output, [:filter] do |t, args|
-  args.with_defaults(:filter=>'*')
-  outputs = Dir['output/' + args.filter]
+  args.with_defaults(:filter=>'section-7')
+  tests = args.fetch(:filter) # 'section-7'
+  outputs = Dir['output/' + tests + '/*']
   puts "Cleaning output..."
   for o in outputs
     FileUtils.remove_dir(o)
@@ -79,9 +81,11 @@ task :clean_output, [:filter] do |t, args|
 end
 
 desc "Clean the results CSV"
-task :clean_results do
+task :clean_results, [:filter] do |t, args|
+  args.with_defaults(:filter=>'section-7')
+  tests = args.fetch(:filter) # 'section-7'
+  results = Dir['output/' + tests + '/Results.csv']
   puts "Cleaning results CSV..."
-  results = Dir['output/Results.csv']
   FileUtils.rm(results)
   puts "Cleaning results CSVs completed."
 end
