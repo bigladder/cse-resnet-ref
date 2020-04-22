@@ -66,3 +66,25 @@ task :sim, [:filter] do |t, args|
 end
 
 task :default, [:filter] => [:sim]
+
+desc "Clean the output directory and results CSVs"
+task :clean_output, [:filter] do |t, args|
+  args.with_defaults(:filter=>'*')
+  outputs = Dir['output/' + args.filter]
+  puts "Cleaning output..."
+  for o in outputs
+    FileUtils.remove_dir(o)
+  end
+  puts "Cleaning output completed."
+end
+
+desc "Clean the results CSV"
+task :clean_results do
+  puts "Cleaning results CSV..."
+  results = Dir['output/Results.csv']
+  FileUtils.rm(results)
+  puts "Cleaning results CSVs completed."
+end
+
+desc "Clean outputs and results CSVs"
+task :clean => [:clean_output, :clean_results]
