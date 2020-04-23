@@ -32,6 +32,14 @@
   parameter "framing_factor_other", :default=>0.1 # Note 5 in Table 7.1 specifies 0.1 framing factor for ceiling and floor
   parameter "foundation_type", :default=>"RAISED" # choices: FLOATING, SLAB, BASEMENT
   parameter "foundation_insulated", :default=>false
+  parameter "rsys_main", :default=>false # whether main zone conditioned by RSYS object or imaginary znQMx members
+  parameter "rsys_basement", :default=>false # whether basement zone conditioned by RSYS object or imaginary znQMx members
+  parameter "rsys_type", :default=>"ACFURNACE" # heat/cool type, choices: ACFURNACE | ASHP | ACRESISTANCE
+  parameter "rsys_heat_cap", :default=>0 # heating capacity, Btu/hr
+  parameter "rsys_afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
+  parameter "rsys_cool_cap", :default=>0 # cooling capacity, Btu/hr
+  parameter "rsys_seer", :default=>10 # DX cooling SEER
+  parameter "rsys_hspf", :default=>6.8 # Heating Seasonal Performance Factor for ASHP
 %>
 
 <%
@@ -367,9 +375,13 @@ ZONE "Main Zone"
   znVol = <%= zone_vol_cond %>
   znCAir = <%= 0.24*0.077*zone_vol_cond %>
   znTH = <%= heat_sp %>
-  znQMxH = <%= heat_power %>
   znTC = <%= cool_sp %>
+<% if not rsys_main %>
+  znQMxH = <%= heat_power %>
   znQMxC = <%= cool_power %>
+<% else %>
+  znRSys = "Main Zone HVAC System"
+<% end %>
   znHcAirX = 0.0 // Remove +4.8 ACH assumed for non-RSYS zones
   infAC = <%= ach %>
   znFloorZ = 0.0
@@ -381,11 +393,15 @@ ZONE "Main Zone"
     gnPower = hourval(1139, 1139, 1139, 1139, 1139, 1903, 2391, 4782, 2790, 1707, 1707, 2277, 1707, 1424, 1480, 1480, 2164, 2334, 2505, 3928, 3928, 4101, 4101, 3701) // Hourly sensible loads in Btu
     gnFrRad = 0.7
     gnFrLat = 0
+    gnMeter = "Elec Meter"
+    gnEndUse = RCP
 
   GAIN "Internal Latent Gain"
     gnPower = hourval(247, 247, 247, 247, 247, 412, 518, 1036, 604, 370, 370, 493, 370, 308, 321, 321, 469, 506, 543, 851, 851, 888, 888, 802) // Hourly latent loads in Btu
     gnFrRad = 0
     gnFrLat = 1
+    gnMeter = "Elec Meter"
+    gnEndUse = RCP
 <% end %>
 
 <%
@@ -577,6 +593,23 @@ window_area = 0.0
   <% end %>
 <% end %>
 
+<% if rsys_main %>
+// Main Zone HVAC System
+  RSYS "Main Zone HVAC System"
+    rsType = <%= rsys_type %>
+    rsElecMtr = "Elec Meter"
+    rsFuelMtr = "Gas Meter"
+    rsCapC = <%= rsys_cool_cap %>
+    rsSEER = <%= rsys_seer %>
+  <% if rsys_type == "ACFURNACE" or rsys_type == "ACRESISTANCE" %>
+    rsAFUE = <%= rsys_afue %>
+    rsCapH = <%= rsys_heat_cap %>
+  <% elsif rsys_type == "ASHP" %>
+    rsHSPF = <%= rsys_hspf %>
+    rsCap47 = <%= rsys_heat_cap %>
+  <% end %>
+<% end %>
+
 // Zone
 ZONE "Attic Zone"
   znModel = UZX
@@ -628,9 +661,13 @@ ZONE "Basement Zone"
   znArea = <%= floor_area %>
   znVol = <%= zone_vol_bsmt %>
   znTH = <%= heat_sp %>
-  znQMxH = <%= heat_power %>
   znTC = <%= cool_sp %>
+<% if not rsys_basement %>
+  znQMxH = <%= heat_power %>
   znQMxC = <%= cool_power %>
+<% else %>
+  znRSys = "Basement Zone HVAC System"
+<% end %>
   znHcAirX = 0.0 // Remove +4.8 ACH assumed for non-RSYS zones
   infAC = 0.0
   <%
@@ -683,12 +720,53 @@ ZONE "Basement Zone"
   <% end %>
 <% end %>
 
+<% if rsys_main %>
+// Basement Zone HVAC System
+  RSYS "Basement Zone HVAC System"
+    rsType = <%= rsys_type %>
+    rsElecMtr = "Elec Meter"
+    rsFuelMtr = "Gas Meter"
+    rsCapC = <%= rsys_cool_cap %>
+    rsSEER = <%= rsys_seer %>
+  <% if rsys_type == "ACFURNACE" or rsys_type == "ACRESISTANCE" %>
+    rsAFUE = <%= rsys_afue %>
+    rsCapH = <%= rsys_heat_cap %>
+  <% elsif rsys_type == "ASHP" %>
+    rsHSPF = <%= rsys_hspf %>
+    rsCap47 = <%= rsys_heat_cap %>
+  <% end %>
+<% end %>
+
+// Meters
+METER "Elec Meter"
+METER "Gas Meter"
+
 // Output
 DELETE REPORT EB
 DELETE REPORT INP
 DELETE REPORT LOG
 DELETE REPORT ERR
 REPORT  rpType=ZEB  rpZone="Main Zone"  rpFreq=Month
+
+EXPORTFILE "Meters"
+  xfFileName = "Meters.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Meters"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exMeter = "Elec Meter"
+  exType = MTR
+  exFreq = MONTH
+
+EXPORT
+  exExportfile = "Meters"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exMeter = "Gas Meter"
+  exType = MTR
+  exFreq = MONTH
 
 EXPORTFILE "Detailed"
   xfFileName = "Detailed.csv"
@@ -757,10 +835,18 @@ EXPORT
   EXPORTCOL colHead="Case" colVal="<%= case_name %>"
 
   // Heating
+<% if rsys_main or rsys_basement %>
+  EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
+<% else %>
   EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qhMech/1000000
+<% end %>
 
   // Cooling
+<% if rsys_main or rsys_basement %>
+  EXPORTCOL colHead="Annual Cooling [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg)/1000000
+<% else %>
   EXPORTCOL colHead="Annual Cooling [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qcMech/-1000000
+<% end %>
 
 /*
 */
