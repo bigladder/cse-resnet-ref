@@ -1,0 +1,8 @@
+:case_name=>"HVAC3f",
+:climate=>"COOLING",
+:rsys_main=>true,
+:rsys_cool_cap=>49900,
+:rsys_cfm_per_ton=>360,
+:supply_duct_area_fraction=>0.2,
+:return_duct_area_fraction=>0.05,
+:duct_zone=>"Attic Zone"
