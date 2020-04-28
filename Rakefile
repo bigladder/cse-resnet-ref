@@ -1,16 +1,18 @@
 require 'fileutils'
+require 'pathname'
 
-def compose(c, tests)
+def compose(c)
   file_base = File.basename(c,".*")
+  file_dir = Pathname(c).parent.basename
 
-  output_dir = 'output/' + tests + '/' + file_base
+  output_dir = "output/#{file_dir}/#{file_base}"
   #Create output directory
   unless File.directory?(output_dir)
     FileUtils.mkdir_p(output_dir)
   end
 
   src = ['base.pxt', 'CSE.exe', c]
-  target = output_dir + '/in.cse'
+  target = "#{output_dir}/in.cse"
 
   puts "================="
   puts "Running case " + file_base + ":"
@@ -20,7 +22,7 @@ def compose(c, tests)
   success = nil
   if !(FileUtils.uptodate?(target, src))
     puts "\ncomposing...\n\n"
-    success = system(%Q|modelkit template-compose -f "#{c}" -o "#{output_dir + '/in.cse'}"  base.pxt|)
+    success = system(%Q|modelkit template-compose -f "#{c}" -o "#{output_dir}/in.cse"  base.pxt|)
   else
     puts "  ...input already up-to-date."
     success = true
@@ -28,13 +30,14 @@ def compose(c, tests)
   return success
 end
 
-def sim(c, tests)
+def sim(c)
   file_base = File.basename(c,".*")
+  file_dir = Pathname(c).parent.basename
 
-  output_dir = 'output/' + tests + '/' + file_base
+  output_dir = "output/#{file_dir}/#{file_base}"
 
-  src = [output_dir + '/in.cse']
-  target = [output_dir + '/in.rep', output_dir + '/DETAILED.csv']
+  src = ["#{output_dir}/in.cse"]
+  target = ["#{output_dir}/in.rep", "#{output_dir}/DETAILED.csv"]
 
   success = nil
   if !(FileUtils.uptodate?(target[0], src)) or !(FileUtils.uptodate?(target[1], src))
@@ -50,18 +53,24 @@ def sim(c, tests)
   return success
 end
 
-task :sim, [:filter] do |t, args|
-  args.with_defaults(:filter=>'section-7')
-  tests = args.fetch(:filter) # 'section-7'
-  cases = Dir['cases/' + tests + '/*.*']
-  for c in cases
-    if !compose(c, tests)
-      puts "\nERROR: Composition failed..."
-      exit
-    end
-    if !sim(c, tests)
-      puts "\nERROR: Simulation failed..."
-      exit
+# example: 'rake sim[section-7, L100AC]' for just one case
+# example: 'rake sim[section-7]' for all cases of a test suite
+# example: 'rake sim' for all cases of all test suites
+desc "Compose and simulate cases"
+task :sim, [:tests, :filter] do |t, args|
+  args.with_defaults(:tests=>"*", :filter=>"*")
+  tests = Dir["cases/#{args.tests}"] # 'section-7', 'hvac', 'dse'
+  for t in tests
+    cases = Dir["#{t}/#{args.filter}.pxv"]
+    for c in cases
+      if !compose(c)
+        puts "\nERROR: Composition failed..."
+        exit
+      end
+      if !sim(c)
+        puts "\nERROR: Simulation failed..."
+        exit
+      end
     end
   end
 end
@@ -69,26 +78,30 @@ end
 task :default, [:filter] => [:sim]
 
 desc "Clean the output directories"
-task :clean_output, [:filter] do |t, args|
-  args.with_defaults(:filter=>'section-7')
-  tests = args.fetch(:filter) # 'section-7'
-  outputs = Dir['output/' + tests + '/*']
+task :clean_output, [:tests, :filter] do |t, args|
+  args.with_defaults(:tests=>"*", :filter=>"*")
+  outputs = Dir["output/#{args.tests}"]
   puts "Cleaning output..."
   for o in outputs
-    FileUtils.remove_dir(o)
+    cases = Dir["#{o}/#{args.filter}"]
+    for c in cases
+      FileUtils.remove_dir(c)
+    end
   end
   puts "Cleaning output completed."
 end
 
 desc "Clean the results CSV"
-task :clean_results, [:filter] do |t, args|
-  args.with_defaults(:filter=>'section-7')
-  tests = args.fetch(:filter) # 'section-7'
-  results = Dir['output/' + tests + '/Results.csv']
+task :clean_results, [:tests] do |t, args|
+  args.with_defaults(:tests=>'*')
+  tests = args.tests # 'section-7', 'hvac', 'dse'
+  results = Dir["output/#{tests}/Results.csv"]
   puts "Cleaning results CSV..."
-  FileUtils.rm(results)
+  for csv in results
+    FileUtils.rm(csv)
+  end
   puts "Cleaning results CSVs completed."
 end
 
-desc "Clean outputs and results CSVs"
-task :clean => [:clean_output, :clean_results]
+desc "Clean all outputs and results CSVs"
+task :clean_all => [:clean_output, :clean_results]
