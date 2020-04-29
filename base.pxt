@@ -70,6 +70,32 @@ elsif climate == "COOLING"
   cool_power = -3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
 end
 
+# Dimensions
+width = 57.0 # East-to-West dimension in feet
+depth = 27.0 # North-to-South dimension in feet
+roof_pitch = 14.23 # Pitch length of angled roof from eave to peak in feet
+roof_tilt = 18.43 # Tilt angle of roof surface above horizontal in degrees
+height_cond = 8.0 # Floor-to-Ceiling height of conditioned zone in feet
+height_attic = 4.5 # Ceiling-to-Roof height of unconditioned attic in feet
+floor_area = width*depth # Floor area for both conditioned and attic zones in square feet
+zone_vol_cond = floor_area*height_cond # Conditioned zone volume in cubic feet
+zone_vol_attic = 0.5*floor_area*height_attic # Unconditioned attic zone volume in cubic feet
+
+sill_plate_hieght = 1.5/12.0 # [ft]
+rim_joist_hieght = 7.5/12.0 # [ft]
+basement_below_grade = 6 + 7.0/12.0 # [ft]
+basement_above_grade = 8.0/12.0 # [ft]
+basement_wall_height = basement_above_grade + basement_below_grade
+zone_vol_bsmt = floor_area*(sill_plate_hieght + rim_joist_hieght + basement_wall_height) # Conditioned attic zone volume in cubic feet
+
+win_width = 3.0 # Window width [ft]
+win_height = 5.0 # Window height [ft]
+
+door_width = 3.0 # Door width [ft]
+door_height = (6.00 + (8.00 / 12.00) ) # Door height [ft]
+
+overhang_depth = 2.5 # Depth of overhang [ft]
+overhang_height = 1.0 # Height of gap between top of window and bottom of overhang [ft]
 %>
 
 wfName = "<%= weather_file %>"
@@ -311,7 +337,7 @@ CONSTRUCTION "Basement Wall"
   LAYER lrMat="Poured Concrete" lrThk=0'6
 
 FOUNDATION "Basement Foundation"
-  fdWlHtAbvGrd=0'8
+  fdWlHtAbvGrd=<%= basement_above_grade %>
   fdWlDpBlwSlb=0
 
   <% if foundation_insulated %>
@@ -328,37 +354,6 @@ FOUNDATION "Basement Foundation"
 
   <% end %>
 <% end %>
-
-<%
-# Dimensions
-width = 57.0 # East-to-West dimension in feet
-depth = 27.0 # North-to-South dimension in feet
-roof_pitch = 14.23 # Pitch length of angled roof from eave to peak in feet
-roof_tilt = 18.43 # Tilt angle of roof surface above horizontal in degrees
-height_cond = 8.0 # Floor-to-Ceiling height of conditioned zone in feet
-height_attic = 4.5 # Ceiling-to-Roof height of unconditioned attic in feet
-floor_area = width*depth # Floor area for both conditioned and attic zones in square feet
-zone_vol_cond = floor_area*height_cond # Conditioned zone volume in cubic feet
-zone_vol_attic = 0.5*floor_area*height_attic # Unconditioned attic zone volume in cubic feet
-
-sill_plate_hieght = 1.5/12.0 # [ft]
-rim_joist_hieght = 7.5/12.0 # [ft]
-basement_wall_height = 6 + 7.0/12.0 # [ft]
-zone_vol_bsmt = floor_area*(sill_plate_hieght + rim_joist_hieght + basement_wall_height) # Conditioned attic zone volume in cubic feet
-
-win_width = 3.0 # Window width [ft]
-win_height = 5.0 # Window height [ft]
-
-door_width = 3.0 # Door width [ft]
-door_height = (6.00 + (8.00 / 12.00) ) # Door height [ft]
-
-overhang_depth = 2.5 # Depth of overhang [ft]
-overhang_height = 1.0 # Height of gap between top of window and bottom of overhang [ft]
-
-ss_depth = 2.0*m_ft
-ss_area = ss_depth*width
-ss_vol = ss_area*height_cond
-%>
 
 // Zone
 ZONE "Main Zone"
@@ -639,8 +634,8 @@ ZONE "Basement Zone"
   surfaces_bsmt = [
     {:name=>"East Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*depth,:azm=>90,:ext_cond=>"Ambient",:con=>"Rim Joist"},
     {:name=>"West Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*depth,:azm=>270,:ext_cond=>"Ambient",:con=>"Rim Joist"},
-    {:name=>"North Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght**width,:azm=>0,:ext_cond=>"Ambient",:con=>"Rim Joist"},
-    {:name=>"South Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght**width,:azm=>180,:ext_cond=>"Ambient",:con=>"Rim Joist"},
+    {:name=>"North Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*width,:azm=>0,:ext_cond=>"Ambient",:con=>"Rim Joist"},
+    {:name=>"South Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*width,:azm=>180,:ext_cond=>"Ambient",:con=>"Rim Joist"},
     {:name=>"East Basement Sill Plate",:type=>"Wall",:area=>sill_plate_hieght*depth,:azm=>90,:ext_cond=>"Ambient",:con=>"Sill Plate"},
     {:name=>"West Basement Sill Plate",:type=>"Wall",:area=>sill_plate_hieght*depth,:azm=>270,:ext_cond=>"Ambient",:con=>"Sill Plate"},
     {:name=>"North Basement Sill Plate",:type=>"Wall",:area=>sill_plate_hieght*width,:azm=>0,:ext_cond=>"Ambient",:con=>"Sill Plate"},
@@ -722,10 +717,11 @@ EXPORT
   // Transmitted Solar
 <% if window_area > 0.0 %>
   EXPORTCOL colHead="Transmitted Solar [J]" colVal=@znRes["Main Zone"].H.qSlr*<%= btu_j %>
+<% else %>
+  EXPORTCOL colHead="Transmitted Solar [J]" colVal=0.0
 <% end %>
 
   EXPORTCOL colHead="Attic Zone Temp [C]" colVal=(@znRes["Attic Zone"].H.tAir - 32)*<%= 1/k_r %>
-
 
 <% if foundation_type == "BASEMENT" %>
   EXPORTCOL colHead="Basement Zone Temp [C]" colVal=(@znRes["Basement Zone"].H.tAir - 32)*<%= 1/k_r %>
