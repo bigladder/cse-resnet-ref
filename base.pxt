@@ -34,15 +34,14 @@
   parameter "foundation_type", :default=>"RAISED" # choices: FLOATING, SLAB, BASEMENT
   parameter "foundation_insulated", :default=>false
   parameter "raised_floor_insulated", :default=>true
-  parameter "rsys_main", :default=>false # whether main zone conditioned by RSYS object or imaginary znQMx members
-  parameter "rsys_basement", :default=>false # whether basement zone conditioned by RSYS object or imaginary znQMx members
-  parameter "rsys_type", :default=>"ACFURNACE" # heat/cool type, choices: ACFURNACE | ASHP | ACRESISTANCE
-  parameter "rsys_heat_cap", :default=>0 # heating capacity, Btu/hr
-  parameter "rsys_afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
-  parameter "rsys_cool_cap", :default=>0 # cooling capacity, Btu/hr
-  parameter "rsys_seer", :default=>10 # DX cooling SEER
-  parameter "rsys_hspf", :default=>6.8 # Heating Seasonal Performance Factor for ASHP
-  parameter "rsys_cfm_per_ton", :default=>350 # Air flow rate per ton of capacity
+  parameter "hvac_model", :default=>"SIMPLE" # whether zones are conditioned by RSYS object "DETAILED" or imaginary znQMx members "SIMPLE"
+  parameter "hvac_type", :default=>"ACFURNACE" # heat/cool type, choices: ACFURNACE | ASHP | ACRESISTANCE
+  parameter "heating_cap", :default=>0 # heating capacity, Btu/hr
+  parameter "afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
+  parameter "cooling_cap", :default=>0 # cooling capacity, Btu/hr
+  parameter "seer", :default=>10 # DX cooling SEER
+  parameter "hspf", :default=>6.8 # Heating Seasonal Performance Factor for ASHP
+  parameter "fan_flow_per_cap", :default=>360 # Air flow rate as cfm per ton of heat/cool capacity, per Table 4.4.3(1)
   parameter "supply_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as supply duct area
   parameter "return_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as return duct area
   parameter "duct_zone", :default=>"Main Zone" # zone where supply and return ducts are located
@@ -374,8 +373,21 @@ overhang_height = 1.0 # Height of gap between top of window and bottom of overha
 
 supply_duct_area = supply_duct_area_fraction * floor_area
 return_duct_area = return_duct_area_fraction * floor_area
-if rsys_heat_cap > 0 or rsys_cool_cap > 0
-  rsys_airflow = rsys_cfm_per_ton * [rsys_heat_cap, rsys_cool_cap].max / 12000 # multiplying cfm/ton by max of heating or coolig Btu/hr to get cfm
+
+if seer >= 14
+  cooling_fan_power_per_flow = 0.375 # high-efficiency fan power per flow, per Table 4.4.3(1)
+else
+  cooling_fan_power_per_flow = 0.5 # standard fan power per flow, per Table 4.4.3(1)
+end
+
+if afue >= 0.9
+  heating_fan_power_per_flow = 0.375 # high-efficiency fan power per flow, per Table 4.4.3(1)
+else
+  heating_fan_power_per_flow = 0.5 # standard fan power per flow, per Table 4.4.3(1)
+end
+
+if heating_cap > 0 or cooling_cap > 0
+  rsys_airflow = fan_flow_per_cap * [heating_cap, cooling_cap].max / 12000 # multiplying cfm/ton by max of heating or coolig Btu/hr to get cfm
   if return_duct_area > 0 and supply_duct_area > 0
     duct_leakage_fraction = 0.5 * duct_leakage_flow / rsys_airflow # half of total leakage flow assigned to supply + return ducts
   else
@@ -392,11 +404,11 @@ ZONE "Main Zone"
   znCAir = <%= 0.24*0.077*zone_vol_cond %>
   znTH = <%= heat_sp %>
   znTC = <%= cool_sp %>
-<% if not rsys_main %>
+<% if hvac_model  == "DETAILED" %>
+  znRSys = "Main Zone HVAC System"
+<% else %>
   znQMxH = <%= heat_power %>
   znQMxC = <%= cool_power %>
-<% else %>
-  znRSys = "Main Zone HVAC System"
 <% end %>
   znHcAirX = 0.0 // Remove +4.8 ACH assumed for non-RSYS zones
   infAC = <%= ach %>
@@ -607,22 +619,24 @@ window_area = 0.0
   <% end %>
 <% end %>
 
-<% if rsys_main %>
+<% if hvac_model == "DETAILED" %>
 // Main Zone HVAC System
   RSYS "Main Zone HVAC System"
-    rsType = <%= rsys_type %>
+    rsType = <%= hvac_type %>
     rsElecMtr = "Elec Meter"
     rsFuelMtr = "Gas Meter"
-    rsCapC = <%= rsys_cool_cap %>
-    rsSEER = <%= rsys_seer %>
-  <% if rsys_type == "ACFURNACE" or rsys_type == "ACRESISTANCE" %>
-    rsAFUE = <%= rsys_afue %>
-    rsCapH = <%= rsys_heat_cap %>
-  <% elsif rsys_type == "ASHP" %>
-    rsHSPF = <%= rsys_hspf %>
-    rsCap47 = <%= rsys_heat_cap %>
+    rsFanPwrC = <%= cooling_fan_power_per_flow %>
+    rsCapC = <%= cooling_cap %>
+    rsSEER = <%= seer %>
+    rsFanPwrH = <%= heating_fan_power_per_flow %>
+  <% if hvac_type == "ACFURNACE" or hvac_type == "ACRESISTANCE" %>
+    rsAFUE = <%= afue %>
+    rsCapH = <%= heating_cap %>
+  <% elsif hvac_type == "ASHP" %>
+    rsHSPF = <%= hspf %>
+    rsCap47 = <%= heating_cap %>
   <% end %>
-    rsVFPerTon = <%= rsys_cfm_per_ton %>
+    rsVFPerTon = <%= fan_flow_per_cap %>
 
   <% if supply_duct_area > 0 %>
   // Main Zone Supply Duct
@@ -701,12 +715,8 @@ ZONE "Basement Zone"
   znVol = <%= zone_vol_bsmt %>
   znTH = <%= heat_sp %>
   znTC = <%= cool_sp %>
-<% if not rsys_basement %>
   znQMxH = <%= heat_power %>
   znQMxC = <%= cool_power %>
-<% else %>
-  znRSys = "Basement Zone HVAC System"
-<% end %>
   znHcAirX = 0.0 // Remove +4.8 ACH assumed for non-RSYS zones
   infAC = 0.0
   <%
@@ -756,23 +766,6 @@ ZONE "Basement Zone"
     sfExRf = 1.67
     sfExHcModel = UNIFIED
     sfInHcModel = UNIFIED
-  <% end %>
-<% end %>
-
-<% if rsys_basement %>
-// Basement Zone HVAC System
-  RSYS "Basement Zone HVAC System"
-    rsType = <%= rsys_type %>
-    rsElecMtr = "Elec Meter"
-    rsFuelMtr = "Gas Meter"
-    rsCapC = <%= rsys_cool_cap %>
-    rsSEER = <%= rsys_seer %>
-  <% if rsys_type == "ACFURNACE" or rsys_type == "ACRESISTANCE" %>
-    rsAFUE = <%= rsys_afue %>
-    rsCapH = <%= rsys_heat_cap %>
-  <% elsif rsys_type == "ASHP" %>
-    rsHSPF = <%= rsys_hspf %>
-    rsCap47 = <%= rsys_heat_cap %>
   <% end %>
 <% end %>
 
@@ -874,15 +867,25 @@ EXPORT
   EXPORTCOL colHead="Case" colVal="<%= case_name %>"
 
   // Heating
-<% if rsys_main or rsys_basement %>
-  EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
+<% if hvac_model  == "DETAILED" %>
+  <% if case_name == "HVAC2a" or case_name == "HVAC2b" %>
+  EXPORTCOL colHead="Annual Heating Equipment [therm]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/100000
+  EXPORTCOL colHead="Annual Heating Fan [kWh]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/<%= w_btu %>/1000
+  EXPORTCOL colHead="Annual Heating Total [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
+  <% else %>
+  EXPORTCOL colHead="Annual Heating Equipment [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
+  EXPORTCOL colHead="Annual Heating Fan [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
+  EXPORTCOL colHead="Annual Heating Total [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
+  <% end %>
 <% else %>
   EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qhMech/1000000
 <% end %>
 
   // Cooling
-<% if rsys_main or rsys_basement %>
-  EXPORTCOL colHead="Annual Cooling [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg)/1000000
+<% if hvac_model  == "DETAILED" %>
+  EXPORTCOL colHead="Annual Cooling Equipment [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg)/1000000
+  EXPORTCOL colHead="Annual Cooling Fan [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.fanC + @meter["Gas Meter"].Y.fanC)/1000000
+  EXPORTCOL colHead="Annual Cooling Total [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg + @meter["Elec Meter"].Y.fanC + @meter["Gas Meter"].Y.fanC)/1000000
 <% else %>
   EXPORTCOL colHead="Annual Cooling [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qcMech/-1000000
 <% end %>

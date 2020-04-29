@@ -1,6 +1,6 @@
 :case_name=>"HVAC2d",
 :climate=>"HEATING",
-:rsys_main=>true,
-:rsys_heat_cap=>56100,
-:rsys_type=>"ASHP",
-:rsys_hspf=>9.85
+:hvac_model=>"DETAILED",
+:heating_cap=>56100,
+:hvac_type=>"ASHP",
+:hspf=>9.85
