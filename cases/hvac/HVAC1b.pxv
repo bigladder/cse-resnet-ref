@@ -1,0 +1,5 @@
+:case_name=>"HVAC1b",
+:climate=>"COOLING",
+:rsys_main=>true,
+:rsys_cool_cap=>38300,
+:rsys_seer=>13

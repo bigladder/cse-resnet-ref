@@ -1,0 +1,10 @@
+:case_name=>"HVAC3b",
+:climate=>"HEATING",
+:foundation_type=>"BASEMENT",
+:framing_factor_floor=>0.13,
+:rsys_main=>true,
+:rsys_heat_cap=>56000,
+:rsys_cfm_per_ton=>360,
+:supply_duct_area_fraction=>0.2,
+:return_duct_area_fraction=>0.05,
+:duct_zone=>"Basement Zone"

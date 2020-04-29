@@ -1,0 +1,6 @@
+:case_name=>"L202AC",
+:climate=>"HEATING",
+:ach=>1.5,
+:ext_sol_abs_exposed=>0.2,
+:envelope_eff=>"LOW",
+:raised_floor_insulated=>false

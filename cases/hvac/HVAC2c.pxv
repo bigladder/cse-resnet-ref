@@ -1,0 +1,5 @@
+:case_name=>"HVAC2c",
+:climate=>"HEATING",
+:rsys_main=>true,
+:rsys_heat_cap=>56100,
+:rsys_type=>"ASHP"

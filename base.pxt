@@ -29,9 +29,26 @@
   parameter "h_ext", :default=>nil
   parameter "h_int", :default=>nil
   parameter "framing_factor_walls", :default=>0.25 # Note 3 in Table 7.1 specifies 0.25 framing factor for exterior walls
-  parameter "framing_factor_other", :default=>0.1 # Note 5 in Table 7.1 specifies 0.1 framing factor for ceiling and floor
+  parameter "framing_factor_floor", :default=>0.1 # Note 5 in Table 7.1 specifies 0.1 framing factor for floor
+  parameter "framing_factor_other", :default=>0.1 # Note 5 in Table 7.1 specifies 0.1 framing factor for ceiling, same for Note 1 in Table 7.8 for interior walls
   parameter "foundation_type", :default=>"RAISED" # choices: FLOATING, SLAB, BASEMENT
   parameter "foundation_insulated", :default=>false
+  parameter "raised_floor_insulated", :default=>true
+  parameter "rsys_main", :default=>false # whether main zone conditioned by RSYS object or imaginary znQMx members
+  parameter "rsys_basement", :default=>false # whether basement zone conditioned by RSYS object or imaginary znQMx members
+  parameter "rsys_type", :default=>"ACFURNACE" # heat/cool type, choices: ACFURNACE | ASHP | ACRESISTANCE
+  parameter "rsys_heat_cap", :default=>0 # heating capacity, Btu/hr
+  parameter "rsys_afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
+  parameter "rsys_cool_cap", :default=>0 # cooling capacity, Btu/hr
+  parameter "rsys_seer", :default=>10 # DX cooling SEER
+  parameter "rsys_hspf", :default=>6.8 # Heating Seasonal Performance Factor for ASHP
+  parameter "rsys_cfm_per_ton", :default=>350 # Air flow rate per ton of capacity
+  parameter "supply_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as supply duct area
+  parameter "return_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as return duct area
+  parameter "duct_zone", :default=>"Main Zone" # zone where supply and return ducts are located
+  parameter "duct_insulation_r_value", :default=>0 # R-value of duct insulation without air film
+  parameter "duct_air_film_r_value", :default=>1.5 # R-value of exterior air film for duct (or duct insulation)
+  parameter "duct_leakage_flow", :default=>0 # combined cfm airflow leaking out of supply + return ducts
 %>
 
 <%
@@ -96,6 +113,18 @@ door_height = (6.00 + (8.00 / 12.00) ) # Door height [ft]
 
 overhang_depth = 2.5 # Depth of overhang [ft]
 overhang_height = 1.0 # Height of gap between top of window and bottom of overhang [ft]
+
+supply_duct_area = supply_duct_area_fraction * floor_area
+return_duct_area = return_duct_area_fraction * floor_area
+if rsys_heat_cap > 0 or rsys_cool_cap > 0
+  rsys_airflow = rsys_cfm_per_ton * [rsys_heat_cap, rsys_cool_cap].max / 12000 # multiplying cfm/ton by max of heating or coolig Btu/hr to get cfm
+  if return_duct_area > 0 and supply_duct_area > 0
+    duct_leakage_fraction = 0.5 * duct_leakage_flow / rsys_airflow # half of total leakage flow assigned to supply + return ducts
+  else
+    duct_leakage_fraction = duct_leakage_flow / rsys_airflow # total leakage flow assigned to supply or return duct
+  end
+end
+
 %>
 
 wfName = "<%= weather_file %>"
@@ -235,14 +264,14 @@ CONSTRUCTION "Door"
 CONSTRUCTION "Raised Floor - Frame"    // Assembly for portion of raised floors that contain framing
   LAYER lrMat="Carpet with Fibrous Pad" lrThk= 0'0.5 // No thickness specified in Table 7-5, assumed carpet pad is 0.5" thick
   LAYER lrMat="Plywood" lrThk= 0'0.75
-  <% if envelope_eff != "LOW" and foundation_type != "BASEMENT" %>
+  <% if raised_floor_insulated %>
   LAYER lrMat="Wood Framing" lrThk= 0'3.5  // Assumed to be same thickness as insulation
   <% end %>
 
 CONSTRUCTION "Raised Floor - Cavity"    // Assembly for portion of raised floors that contain cavity between framing
   LAYER lrMat="Carpet with Fibrous Pad" lrThk= 0'0.5 // No thickness specified in Table 7-5, assumed carpet pad is 0.5" thick
   LAYER lrMat="Plywood" lrThk= 0'0.75
-  <% if envelope_eff != "LOW" and foundation_type != "BASEMENT" %>
+  <% if raised_floor_insulated %>
   LAYER lrMat="R-11 Fiberglass Batt" lrThk= 0'3.5
   <% end %>
 
@@ -362,9 +391,13 @@ ZONE "Main Zone"
   znVol = <%= zone_vol_cond %>
   znCAir = <%= 0.24*0.077*zone_vol_cond %>
   znTH = <%= heat_sp %>
-  znQMxH = <%= heat_power %>
   znTC = <%= cool_sp %>
+<% if not rsys_main %>
+  znQMxH = <%= heat_power %>
   znQMxC = <%= cool_power %>
+<% else %>
+  znRSys = "Main Zone HVAC System"
+<% end %>
   znHcAirX = 0.0 // Remove +4.8 ACH assumed for non-RSYS zones
   infAC = <%= ach %>
   znFloorZ = 0.0
@@ -376,11 +409,15 @@ ZONE "Main Zone"
     gnPower = hourval(1139, 1139, 1139, 1139, 1139, 1903, 2391, 4782, 2790, 1707, 1707, 2277, 1707, 1424, 1480, 1480, 2164, 2334, 2505, 3928, 3928, 4101, 4101, 3701) // Hourly sensible loads in Btu
     gnFrRad = 0.7
     gnFrLat = 0
+    gnMeter = "Elec Meter"
+    gnEndUse = RCP
 
   GAIN "Internal Latent Gain"
     gnPower = hourval(247, 247, 247, 247, 247, 412, 518, 1036, 604, 370, 370, 493, 370, 308, 321, 321, 469, 506, 543, 851, 851, 888, 888, 802) // Hourly latent loads in Btu
     gnFrRad = 0
     gnFrLat = 1
+    gnMeter = "Elec Meter"
+    gnEndUse = RCP
 <% end %>
 
 <%
@@ -389,8 +426,6 @@ ZONE "Main Zone"
 
 if foundation_type == "SLAB"
   framing_factor_floor = 0.0
-else
-  framing_factor_floor = framing_factor_other
 end
 
 surfaces_cond = [
@@ -572,6 +607,48 @@ window_area = 0.0
   <% end %>
 <% end %>
 
+<% if rsys_main %>
+// Main Zone HVAC System
+  RSYS "Main Zone HVAC System"
+    rsType = <%= rsys_type %>
+    rsElecMtr = "Elec Meter"
+    rsFuelMtr = "Gas Meter"
+    rsCapC = <%= rsys_cool_cap %>
+    rsSEER = <%= rsys_seer %>
+  <% if rsys_type == "ACFURNACE" or rsys_type == "ACRESISTANCE" %>
+    rsAFUE = <%= rsys_afue %>
+    rsCapH = <%= rsys_heat_cap %>
+  <% elsif rsys_type == "ASHP" %>
+    rsHSPF = <%= rsys_hspf %>
+    rsCap47 = <%= rsys_heat_cap %>
+  <% end %>
+    rsVFPerTon = <%= rsys_cfm_per_ton %>
+
+  <% if supply_duct_area > 0 %>
+  // Main Zone Supply Duct
+    DUCTSEG "Main Zone Supply Duct"
+      dsTy = SUPPLY
+      dsExArea = <%= supply_duct_area %>
+      dsExCnd = ADJZN
+      dsAdjZn = "<%= duct_zone %>"
+      dsInsulR = <%= duct_insulation_r_value %>
+      dsExH = <%= 1 / duct_air_film_r_value %>
+      dsLeakF = <%= duct_leakage_fraction %>
+  <% end %>
+
+  <% if return_duct_area > 0 %>
+  // Main Zone Return Duct
+    DUCTSEG "Main Zone Return Duct"
+      dsTy = Return
+      dsExArea = <%= return_duct_area %>
+      dsExCnd = ADJZN
+      dsAdjZn = "<%= duct_zone %>"
+      dsInsulR = <%= duct_insulation_r_value %>
+      dsExH = <%= 1 / duct_air_film_r_value %>
+      dsLeakF = <%= duct_leakage_fraction %>
+  <% end %>
+<% end %>
+
 // Zone
 ZONE "Attic Zone"
   znModel = UZX
@@ -623,9 +700,13 @@ ZONE "Basement Zone"
   znArea = <%= floor_area %>
   znVol = <%= zone_vol_bsmt %>
   znTH = <%= heat_sp %>
-  znQMxH = <%= heat_power %>
   znTC = <%= cool_sp %>
+<% if not rsys_basement %>
+  znQMxH = <%= heat_power %>
   znQMxC = <%= cool_power %>
+<% else %>
+  znRSys = "Basement Zone HVAC System"
+<% end %>
   znHcAirX = 0.0 // Remove +4.8 ACH assumed for non-RSYS zones
   infAC = 0.0
   <%
@@ -678,12 +759,53 @@ ZONE "Basement Zone"
   <% end %>
 <% end %>
 
+<% if rsys_basement %>
+// Basement Zone HVAC System
+  RSYS "Basement Zone HVAC System"
+    rsType = <%= rsys_type %>
+    rsElecMtr = "Elec Meter"
+    rsFuelMtr = "Gas Meter"
+    rsCapC = <%= rsys_cool_cap %>
+    rsSEER = <%= rsys_seer %>
+  <% if rsys_type == "ACFURNACE" or rsys_type == "ACRESISTANCE" %>
+    rsAFUE = <%= rsys_afue %>
+    rsCapH = <%= rsys_heat_cap %>
+  <% elsif rsys_type == "ASHP" %>
+    rsHSPF = <%= rsys_hspf %>
+    rsCap47 = <%= rsys_heat_cap %>
+  <% end %>
+<% end %>
+
+// Meters
+METER "Elec Meter"
+METER "Gas Meter"
+
 // Output
 DELETE REPORT EB
 DELETE REPORT INP
 DELETE REPORT LOG
 DELETE REPORT ERR
 REPORT  rpType=ZEB  rpZone="Main Zone"  rpFreq=Month
+
+EXPORTFILE "Meters"
+  xfFileName = "Meters.csv"
+  xfFileStat = OVERWRITE
+
+EXPORT
+  exExportfile = "Meters"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exMeter = "Elec Meter"
+  exType = MTR
+  exFreq = MONTH
+
+EXPORT
+  exExportfile = "Meters"
+  exHeader = ColumnsOnly
+  exFooter = No
+  exMeter = "Gas Meter"
+  exType = MTR
+  exFreq = MONTH
 
 EXPORTFILE "Detailed"
   xfFileName = "Detailed.csv"
@@ -753,10 +875,18 @@ EXPORT
   EXPORTCOL colHead="Case" colVal="<%= case_name %>"
 
   // Heating
+<% if rsys_main or rsys_basement %>
+  EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
+<% else %>
   EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qhMech/1000000
+<% end %>
 
   // Cooling
+<% if rsys_main or rsys_basement %>
+  EXPORTCOL colHead="Annual Cooling [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg)/1000000
+<% else %>
   EXPORTCOL colHead="Annual Cooling [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qcMech/-1000000
+<% end %>
 
 /*
 */
