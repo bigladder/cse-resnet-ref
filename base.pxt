@@ -25,7 +25,6 @@
   parameter "heat_sp", :default=>68 # F
   parameter "cool_sp", :default=>78 # F
   parameter "heat_sb", :default=>20 # C
-  parameter "vent_fan", :default=>false
   parameter "h_ext", :default=>nil
   parameter "h_int", :default=>nil
   parameter "framing_factor_walls", :default=>0.25 # Note 3 in Table 7.1 specifies 0.25 framing factor for exterior walls
@@ -49,6 +48,10 @@
   parameter "duct_insulation_r_value", :default=>0 # R-value of duct insulation without air film
   parameter "duct_air_film_r_value", :default=>1.5 # R-value of exterior air film for duct (or duct insulation)
   parameter "duct_leakage_flow", :default=>0 # combined cfm airflow leaking out of supply + return ducts
+
+# Testing
+  parameter "isolate_attic", :default=>false
+  parameter "interior_walls", :default=>true
 %>
 
 <%
@@ -72,7 +75,7 @@ def c_f(c)
 end
 
 # Internal use
-nsteps = 1
+nsteps = 6
 
 # weather file
 if climate == "HEATING"
@@ -291,6 +294,9 @@ CONSTRUCTION "Gable Wall"
 
 CONSTRUCTION "Ceiling - Frame"    // Assembly for portion of ceilings that contain framing
   LAYER lrMat="Plasterboard" lrThk= 0'0.5
+<% if isolate_attic %>
+  LAYER lrMat="Polyisocyanurate board insulation" lrThk= 3
+<% end %>
   <% if envelope_eff == "LOW" %>
   LAYER lrMat="Wood Framing" lrThk= 0'3.5  // Assume same thickness as insulation
   <% else %>
@@ -302,6 +308,9 @@ CONSTRUCTION "Ceiling - Frame"    // Assembly for portion of ceilings that conta
 
 CONSTRUCTION "Ceiling - Cavity"    // Assembly for portion of ceilings that contain cavity between framing
   LAYER lrMat="Plasterboard" lrThk= 0'0.5
+<% if isolate_attic %>
+  LAYER lrMat="Polyisocyanurate board insulation" lrThk= 3
+<% end %>
   <% if envelope_eff != "LOW" %>
   LAYER lrMat="R-19 Fiberglass Batt - Ceiling" lrThk= 0'6.25
   <% else %>
@@ -438,6 +447,11 @@ surfaces_cond = [
   {:name=>"North-South Interior Wall",:type=>"Wall",:area=>632,:azm=>90,:windows=>0,:framing_factor=>framing_factor_other,:doors=>0},
   {:name=>"East-West Interior Wall",:type=>"Wall",:area=>392,:azm=>0,:windows=>0,:framing_factor=>framing_factor_other,:doors=>0}
 ]
+
+if !interior_walls
+  surfaces_cond = surfaces_cond[0..-3]
+end
+
 windows = []
 window_area = 0.0
 %>
@@ -488,7 +502,7 @@ window_area = 0.0
       <% end %>
     <% end %>
       sfArea = <%= surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors])) %>
-      sfModel = forward_difference
+      sfModel = FORWARD_DIFFERENCE
       sfInAbs = <%= int_sol_abs %>
       sfExEpsLW = <%= ext_lw_abs %>
       sfInEpsLW = <%= int_lw_abs %>
@@ -542,7 +556,7 @@ window_area = 0.0
     sfExAbs = 0               // Section 7.2.1.5 of ASHRAE Std 140-2011 requires underside of conditioned zone floor shall receive no solar radiation
   <% end %>
     sfArea = <%= surface[:area] - (surface[:framing_factor] * (surface[:area] - (win_height * win_width * surface[:windows]) - (door_height * door_width * surface[:doors]))) %>
-    sfModel = forward_difference
+    sfModel = FORWARD_DIFFERENCE
     sfInAbs = <%= int_sol_abs %>
     sfExEpsLW = <%= ext_lw_abs %>
     sfInEpsLW = <%= int_lw_abs %>
@@ -554,7 +568,7 @@ window_area = 0.0
     <% door_name = surface[:name] + " Door " + door.to_s %>
     DOOR  "<%= door_name %>"
       drArea = <%= door_height*door_width %>
-      drModel = forward_difference
+      drModel = FORWARD_DIFFERENCE
       drExRf = 1.67
       drCon = "Door"
       drExAbs = <%= ext_sol_abs_exposed %>
@@ -683,7 +697,7 @@ surfaces_attic = [
   <% end %>
     sfArea = <%= surface[:area] %>
     sfExCnd = Ambient
-    sfModel = forward_difference
+    sfModel = FORWARD_DIFFERENCE
     sfExAbs = <%= ext_sol_abs_exposed %>
     sfInAbs = <%= int_sol_abs %>
     sfExEpsLW = <%= ext_lw_abs %>
@@ -743,7 +757,7 @@ ZONE "Basement Zone"
     <% if surface[:ext_cond] == "Ground" %>
     sfModel = KIVA
     <% else %>
-    sfModel = forward_difference
+    sfModel = FORWARD_DIFFERENCE
     <% end %>
     sfType = "<%= surface[:type] %>"
     sfArea = <%= surface[:area] %>
@@ -786,6 +800,8 @@ DELETE REPORT INP
 DELETE REPORT LOG
 DELETE REPORT ERR
 REPORT  rpType=ZEB  rpZone="Main Zone"  rpFreq=Month
+REPORT  rpType=ZDD  rpZone="Main Zone"
+
 
 EXPORTFILE "Meters"
   xfFileName = "Meters.csv"
