@@ -86,6 +86,44 @@ elsif climate == "COOLING"
   cool_power = -3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
 end
 
+# Dimensions
+width = 57.0 # East-to-West dimension in feet
+depth = 27.0 # North-to-South dimension in feet
+roof_pitch = 14.23 # Pitch length of angled roof from eave to peak in feet
+roof_tilt = 18.43 # Tilt angle of roof surface above horizontal in degrees
+height_cond = 8.0 # Floor-to-Ceiling height of conditioned zone in feet
+height_attic = 4.5 # Ceiling-to-Roof height of unconditioned attic in feet
+floor_area = width*depth # Floor area for both conditioned and attic zones in square feet
+zone_vol_cond = floor_area*height_cond # Conditioned zone volume in cubic feet
+zone_vol_attic = 0.5*floor_area*height_attic # Unconditioned attic zone volume in cubic feet
+
+sill_plate_hieght = 1.5/12.0 # [ft]
+rim_joist_hieght = 7.5/12.0 # [ft]
+basement_below_grade = 6 + 7.0/12.0 # [ft]
+basement_above_grade = 8.0/12.0 # [ft]
+basement_wall_height = basement_above_grade + basement_below_grade
+zone_vol_bsmt = floor_area*(sill_plate_hieght + rim_joist_hieght + basement_wall_height) # Conditioned attic zone volume in cubic feet
+
+win_width = 3.0 # Window width [ft]
+win_height = 5.0 # Window height [ft]
+
+door_width = 3.0 # Door width [ft]
+door_height = (6.00 + (8.00 / 12.00) ) # Door height [ft]
+
+overhang_depth = 2.5 # Depth of overhang [ft]
+overhang_height = 1.0 # Height of gap between top of window and bottom of overhang [ft]
+
+supply_duct_area = supply_duct_area_fraction * floor_area
+return_duct_area = return_duct_area_fraction * floor_area
+if rsys_heat_cap > 0 or rsys_cool_cap > 0
+  rsys_airflow = rsys_cfm_per_ton * [rsys_heat_cap, rsys_cool_cap].max / 12000 # multiplying cfm/ton by max of heating or coolig Btu/hr to get cfm
+  if return_duct_area > 0 and supply_duct_area > 0
+    duct_leakage_fraction = 0.5 * duct_leakage_flow / rsys_airflow # half of total leakage flow assigned to supply + return ducts
+  else
+    duct_leakage_fraction = duct_leakage_flow / rsys_airflow # total leakage flow assigned to supply or return duct
+  end
+end
+
 %>
 
 wfName = "<%= weather_file %>"
@@ -284,7 +322,7 @@ CONSTRUCTION "Interior Wall - Cavity"    // Assembly for portion of interior wal
 
 
 <% if foundation_type == "SLAB" %>
-MATERIAL "Slab Insulation"    
+MATERIAL "Slab Insulation"
   matCond = 0.0154            // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
   matSpHt = 0.22              // Specific heat of material, Btu/lb-F
   matDens = 2.0               // Density, lb/ft3
@@ -327,7 +365,7 @@ CONSTRUCTION "Basement Wall"
   LAYER lrMat="Poured Concrete" lrThk=0'6
 
 FOUNDATION "Basement Foundation"
-  fdWlHtAbvGrd=0'8
+  fdWlHtAbvGrd=<%= basement_above_grade %>
   fdWlDpBlwSlb=0
 
   <% if foundation_insulated %>
@@ -344,57 +382,6 @@ FOUNDATION "Basement Foundation"
 
   <% end %>
 <% end %>
-
-<%
-# Dimensions
-width = 57.0 # East-to-West dimension in feet
-depth = 27.0 # North-to-South dimension in feet
-roof_pitch = 14.23 # Pitch length of angled roof from eave to peak in feet
-roof_tilt = 18.43 # Tilt angle of roof surface above horizontal in degrees
-height_cond = 8.0 # Floor-to-Ceiling height of conditioned zone in feet
-height_attic = 4.5 # Ceiling-to-Roof height of unconditioned attic in feet
-floor_area = width*depth # Floor area for both conditioned and attic zones in square feet
-zone_vol_cond = floor_area*height_cond # Conditioned zone volume in cubic feet
-zone_vol_attic = 0.5*floor_area*height_attic # Unconditioned attic zone volume in cubic feet
-
-sill_plate_hieght = 1.5/12.0 # [ft]
-rim_joist_hieght = 7.5/12.0 # [ft]
-basement_wall_height = 6 + 7.0/12.0 # [ft]
-zone_vol_bsmt = floor_area*(sill_plate_hieght + rim_joist_hieght + basement_wall_height) # Conditioned attic zone volume in cubic feet
-
-win_width = 3.0 # Window width [ft]
-win_height = 5.0 # Window height [ft]
-
-door_width = 3.0 # Door width [ft]
-door_height = (6.00 + (8.00 / 12.00) ) # Door height [ft]
-
-overhang_depth = 2.5 # Depth of overhang [ft]
-overhang_height = 1.0 # Height of gap between top of window and bottom of overhang [ft]
-
-supply_duct_area = supply_duct_area_fraction * floor_area
-return_duct_area = return_duct_area_fraction * floor_area
-
-if seer >= 14
-  cooling_fan_power_per_flow = 0.375 # high-efficiency fan power per flow, per Table 4.4.3(1)
-else
-  cooling_fan_power_per_flow = 0.5 # standard fan power per flow, per Table 4.4.3(1)
-end
-
-if afue >= 0.9
-  heating_fan_power_per_flow = 0.375 # high-efficiency fan power per flow, per Table 4.4.3(1)
-else
-  heating_fan_power_per_flow = 0.5 # standard fan power per flow, per Table 4.4.3(1)
-end
-
-if heating_cap > 0 or cooling_cap > 0
-  rsys_airflow = fan_flow_per_cap * [heating_cap, cooling_cap].max / 12000 # multiplying cfm/ton by max of heating or coolig Btu/hr to get cfm
-  if return_duct_area > 0 and supply_duct_area > 0
-    duct_leakage_fraction = 0.5 * duct_leakage_flow / rsys_airflow # half of total leakage flow assigned to supply + return ducts
-  else
-    duct_leakage_fraction = duct_leakage_flow / rsys_airflow # total leakage flow assigned to supply or return duct
-  end
-end
-%>
 
 // Zone
 ZONE "Main Zone"
@@ -725,8 +712,8 @@ ZONE "Basement Zone"
   surfaces_bsmt = [
     {:name=>"East Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*depth,:azm=>90,:ext_cond=>"Ambient",:con=>"Rim Joist"},
     {:name=>"West Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*depth,:azm=>270,:ext_cond=>"Ambient",:con=>"Rim Joist"},
-    {:name=>"North Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght**width,:azm=>0,:ext_cond=>"Ambient",:con=>"Rim Joist"},
-    {:name=>"South Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght**width,:azm=>180,:ext_cond=>"Ambient",:con=>"Rim Joist"},
+    {:name=>"North Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*width,:azm=>0,:ext_cond=>"Ambient",:con=>"Rim Joist"},
+    {:name=>"South Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*width,:azm=>180,:ext_cond=>"Ambient",:con=>"Rim Joist"},
     {:name=>"East Basement Sill Plate",:type=>"Wall",:area=>sill_plate_hieght*depth,:azm=>90,:ext_cond=>"Ambient",:con=>"Sill Plate"},
     {:name=>"West Basement Sill Plate",:type=>"Wall",:area=>sill_plate_hieght*depth,:azm=>270,:ext_cond=>"Ambient",:con=>"Sill Plate"},
     {:name=>"North Basement Sill Plate",:type=>"Wall",:area=>sill_plate_hieght*width,:azm=>0,:ext_cond=>"Ambient",:con=>"Sill Plate"},
@@ -832,10 +819,11 @@ EXPORT
   // Transmitted Solar
 <% if window_area > 0.0 %>
   EXPORTCOL colHead="Transmitted Solar [J]" colVal=@znRes["Main Zone"].H.qSlr*<%= btu_j %>
+<% else %>
+  EXPORTCOL colHead="Transmitted Solar [J]" colVal=0.0
 <% end %>
 
   EXPORTCOL colHead="Attic Zone Temp [C]" colVal=(@znRes["Attic Zone"].H.tAir - 32)*<%= 1/k_r %>
-
 
 <% if foundation_type == "BASEMENT" %>
   EXPORTCOL colHead="Basement Zone Temp [C]" colVal=(@znRes["Basement Zone"].H.tAir - 32)*<%= 1/k_r %>
