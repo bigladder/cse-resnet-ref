@@ -2,4 +2,5 @@
 :climate=>"COOLING",
 :ach=>1.5,
 :envelope_eff=>"LOW",
-:raised_floor_insulated=>false
+:raised_floor_insulated=>false,
+:raised_floor_framed=>false

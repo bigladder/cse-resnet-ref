@@ -33,7 +33,8 @@
   parameter "framing_factor_other", :default=>0.1 # Note 5 in Table 7.1 specifies 0.1 framing factor for ceiling, same for Note 1 in Table 7.8 for interior walls
   parameter "foundation_type", :default=>"RAISED" # choices: FLOATING, SLAB, BASEMENT
   parameter "foundation_insulated", :default=>false
-  parameter "raised_floor_insulated", :default=>true
+  parameter "raised_floor_insulated", :default=>true # whether main zone floor includes cavity insulation
+  parameter "raised_floor_framed", :default=>true # whether main zone floor includes wood framing
   parameter "hvac_model", :default=>"SIMPLE" # whether zones are conditioned by RSYS object "DETAILED" or imaginary znQMx members "SIMPLE"
   parameter "hvac_type", :default=>"ACFURNACE" # heat/cool type, choices: ACFURNACE | ASHP | ACRESISTANCE
   parameter "heating_cap", :default=>0 # heating capacity, Btu/hr
@@ -276,8 +277,12 @@ CONSTRUCTION "Door"
 CONSTRUCTION "Raised Floor - Frame"    // Assembly for portion of raised floors that contain framing
   LAYER lrMat="Carpet with Fibrous Pad" lrThk= 0'0.5 // No thickness specified in Table 7-5, assumed carpet pad is 0.5" thick
   LAYER lrMat="Plywood" lrThk= 0'0.75
-  <% if raised_floor_insulated %>
+  <% if raised_floor_framed %>
+    <% if foundation_type == "BASEMENT" %>
+  LAYER lrMat="Wood Framing" lrThk= 0'7.25  // Assumed to be full thickness of 2"x8" joist
+    <% else %>
   LAYER lrMat="Wood Framing" lrThk= 0'3.5  // Assumed to be same thickness as insulation
+    <% end %>
   <% end %>
 
 CONSTRUCTION "Raised Floor - Cavity"    // Assembly for portion of raised floors that contain cavity between framing
