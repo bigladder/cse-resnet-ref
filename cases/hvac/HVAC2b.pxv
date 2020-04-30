@@ -1,5 +1,5 @@
 :case_name=>"HVAC2b",
 :climate=>"HEATING",
-:rsys_main=>true,
-:rsys_heat_cap=>56100,
-:rsys_afue=>0.9
+:hvac_model=>"DETAILED",
+:heating_cap=>56100,
+:afue=>0.9

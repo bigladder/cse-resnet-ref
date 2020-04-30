@@ -1,6 +1,6 @@
 :case_name=>"HVAC2e",
 :climate=>"HEATING",
-:rsys_main=>true,
-:rsys_heat_cap=>56100,
-:rsys_type=>"ACRESISTANCE",
-:rsys_afue=>1.0
+:hvac_model=>"DETAILED",
+:heating_cap=>56100,
+:hvac_type=>"ACRESISTANCE",
+:afue=>1.0

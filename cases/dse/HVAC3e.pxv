@@ -1,7 +1,6 @@
 :case_name=>"HVAC3e",
 :climate=>"COOLING",
-:rsys_main=>true,
-:rsys_cool_cap=>38400,
-:rsys_cfm_per_ton=>360,
+:hvac_model=>"DETAILED",
+:cooling_cap=>38400,
 :supply_duct_area_fraction=>0.2,
 :return_duct_area_fraction=>0.05
