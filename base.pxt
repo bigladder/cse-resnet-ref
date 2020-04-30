@@ -115,12 +115,25 @@ overhang_height = 1.0 # Height of gap between top of window and bottom of overha
 
 supply_duct_area = supply_duct_area_fraction * floor_area
 return_duct_area = return_duct_area_fraction * floor_area
-if rsys_heat_cap > 0 or rsys_cool_cap > 0
-  rsys_airflow = rsys_cfm_per_ton * [rsys_heat_cap, rsys_cool_cap].max / 12000 # multiplying cfm/ton by max of heating or coolig Btu/hr to get cfm
+
+if seer >= 14
+  cooling_fan_power_per_flow = 0.375 # high-efficiency fan power per flow, per Table 4.4.3(1)
+else
+  cooling_fan_power_per_flow = 0.5 # standard fan power per flow, per Table 4.4.3(1)
+end
+
+if afue >= 0.9
+  heating_fan_power_per_flow = 0.375 # high-efficiency fan power per flow, per Table 4.4.3(1)
+else
+  heating_fan_power_per_flow = 0.5 # standard fan power per flow, per Table 4.4.3(1)
+end
+
+if heating_cap > 0 or cooling_cap > 0
+  fan_flow = fan_flow_per_cap * [heating_cap, cooling_cap].max / 12000 # multiplying cfm/ton by max of heating or coolig Btu/hr to get cfm  if return_duct_area > 0 and supply_duct_area > 0
   if return_duct_area > 0 and supply_duct_area > 0
-    duct_leakage_fraction = 0.5 * duct_leakage_flow / rsys_airflow # half of total leakage flow assigned to supply + return ducts
+    duct_leakage_fraction = 0.5 * duct_leakage_flow / fan_flow # half of total leakage flow assigned to supply + return ducts
   else
-    duct_leakage_fraction = duct_leakage_flow / rsys_airflow # total leakage flow assigned to supply or return duct
+    duct_leakage_fraction = duct_leakage_flow / fan_flow # total leakage flow assigned to supply or return duct
   end
 end
 
@@ -856,7 +869,7 @@ EXPORT
 
   // Heating
 <% if hvac_model  == "DETAILED" %>
-  <% if case_name == "HVAC2a" or case_name == "HVAC2b" %>
+  <% if ["HVAC2a", "HVAC2b", "HVAC3a", "HVAC3b", "HVAC3c", "HVAC3d"].include?(case_name) %>
   EXPORTCOL colHead="Annual Heating Equipment [therm]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/100000
   EXPORTCOL colHead="Annual Heating Fan [kWh]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/<%= w_btu %>/1000
   EXPORTCOL colHead="Annual Heating Total [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
