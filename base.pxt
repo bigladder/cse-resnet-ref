@@ -6,7 +6,6 @@
   parameter "east_windows", :default=>3 # number of windows in East exterior wall
   parameter "west_windows", :default=>3 # number of windows in West exterior wall
   parameter "overhangs", :default=>false
-  parameter "fins", :default=>false
   parameter "orientation", :default=>0.0
   parameter "ext_sol_abs", :default=>0.6 # applied to exterior face of interior surfaces (interior walls, e.g.)
   parameter "ext_sol_abs_exposed", :default=>0.6 # applied to exterior face of exposed surfaces (exterior walls, roofs, end gables, doors)
@@ -614,26 +613,14 @@ window_area = 0.0
       wnExShd = NONE
       wnINShd = NONE
       wnFMult = <%= win_frame_mult %>
-    <% if overhangs or fins %>
-      <% if overhangs %>
+    <% if overhangs %>
       wnVfSkyDf= <%= (Math.sqrt((overhang_height +  win_height)**2 + overhang_depth**2) - Math.sqrt(overhang_height**2 + overhang_depth**2))/(2*win_height) %>
-      <% end %>
 
       SHADE
         ohDepth = <%= overhang_depth %>
         ohDistUp = <%= overhang_height %>
-        ohExL = 0.0
-        ohExR = 0.0
-      <% if fins %>
-        lfDepth = <%= overhang_depth %>
-        lfTopUp = <%= overhang_height %>
-        lfDistL = 0.0
-        lfBotUp = <%= height_cond - overhang_height - win_height %>
-        rfDepth = <%= overhang_depth %>
-        rfTopUp = <%= overhang_height %>
-        rfDistR = 0.0
-        rfBotUp = <%= height_cond - overhang_height - win_height %>
-      <% end %>
+        ohExL = <%= (win - 1)*win_width %>
+        ohExR = <%= 57.0 - (win - 1)*win_width %>
     <% end %>
   <% end %>
 <% end %>
