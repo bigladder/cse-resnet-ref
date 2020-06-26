@@ -78,12 +78,12 @@ nsteps = 6
 
 # weather file
 if climate == "HEATING"
-  weather_file = "TMY-Colorad-v5.0.epw"
+  weather_file = "TMY3-Colorad-v5.0.epw"
   elevation = 6145 # elevation required by Section 7.2.1.7
   heat_power = 3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
   cool_power = 0 # No cooling, required by Section 7.2.1.14.1
 elsif climate == "COOLING"
-  weather_file = "TMY-Lasvega-v5.0.epw"
+  weather_file = "TMY3-Lasvega-v5.0.epw"
   elevation = 2178 # elevation required by Section 7.2.1.7
   heat_power = 0 # No heating, required by Section 7.2.1.14.1
   cool_power = -3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
