@@ -30,14 +30,15 @@
   parameter "framing_factor_floor", :default=>0.1 # Note 5 in Table 7.1 specifies 0.1 framing factor for floor
   parameter "framing_factor_other", :default=>0.1 # Note 5 in Table 7.1 specifies 0.1 framing factor for ceiling, same for Note 1 in Table 7.8 for interior walls
   parameter "foundation_type", :default=>"RAISED" # choices: FLOATING, SLAB, BASEMENT
+  parameter "basement_conditioned", :default=>true # whether basement zone is conditioned by same RSYS as Main Zone, only used for "BASEMENT" foundation type
   parameter "foundation_insulated", :default=>false
   parameter "raised_floor_insulated", :default=>true # whether main zone floor includes cavity insulation
   parameter "raised_floor_framed", :default=>true # whether main zone floor includes wood framing
   parameter "hvac_model", :default=>"SIMPLE" # whether zones are conditioned by RSYS object "DETAILED" or imaginary znQMx members "SIMPLE"
   parameter "hvac_type", :default=>"ACFURNACE" # heat/cool type, choices: ACFURNACE | ASHP | ACRESISTANCE
-  parameter "heating_cap", :default=>0 # heating capacity, Btu/hr
+  parameter "heating_cap", :default=>56100 # heating capacity, Btu/hr, default from HVAC2a gas furnace capacity
   parameter "afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
-  parameter "cooling_cap", :default=>0 # cooling capacity, Btu/hr
+  parameter "cooling_cap", :default=>38300 # cooling capacity, Btu/hr, default from HVAC1a DX capacity
   parameter "seer", :default=>10 # DX cooling SEER
   parameter "hspf", :default=>6.8 # Heating Seasonal Performance Factor for ASHP
   parameter "fan_flow_per_cap", :default=>360 # Air flow rate as cfm per ton of heat/cool capacity, per Table 4.4.3(1)
@@ -716,13 +717,19 @@ surfaces_attic = [
 <% if foundation_type == "BASEMENT" %>
 // Zone
 ZONE "Basement Zone"
+  <% if basement_conditioned %>
   znModel = CZM
+  <% else %>
+  znModel = UZX
+  <% end %>
   znArea = <%= floor_area %>
   znVol = <%= zone_vol_bsmt %>
+  <% if basement_conditioned %>
   znTH = <%= heat_sp %>
   znTC = <%= cool_sp %>
   znQMxH = <%= heat_power %>
   znQMxC = <%= cool_power %>
+  <% end %>
   znHcAirX = 0.0 // Remove +4.8 ACH assumed for non-RSYS zones
   infAC = 0.0
   <%

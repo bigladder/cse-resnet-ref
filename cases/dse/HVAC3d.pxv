@@ -1,6 +1,7 @@
 :case_name=>"HVAC3d",
 :climate=>"HEATING",
 :foundation_type=>"BASEMENT",
+:basement_conditioned=>false,
 :framing_factor_floor=>0.13,
 :hvac_model=>"DETAILED",
 :heating_cap=>61000,
