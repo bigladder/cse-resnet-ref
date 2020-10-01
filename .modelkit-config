@@ -1,0 +1,5 @@
+[template-compose]
+annotate = true
+indent = "    "
+esc-line = "// "
+readvars = false
