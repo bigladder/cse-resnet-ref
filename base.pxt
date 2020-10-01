@@ -48,6 +48,7 @@
   parameter "duct_insulation_r_value", :default=>0 # R-value of duct insulation without air film
   parameter "duct_air_film_r_value", :default=>1.5 # R-value of exterior air film for duct (or duct insulation)
   parameter "duct_leakage_flow", :default=>0 # combined cfm airflow leaking out of supply + return ducts
+  parameter "duct_exterior_emittance", :default=>0 # Exposed (i.e. insulation) outside surface exterior long wave (thermal) emittance
 
 # Testing
   parameter "isolate_attic", :default=>false
@@ -655,6 +656,7 @@ window_area = 0.0
       dsInsulR = <%= duct_insulation_r_value %>
       dsExH = <%= 1 / duct_air_film_r_value %>
       dsLeakF = <%= duct_leakage_fraction %>
+      dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
 
   <% if return_duct_area > 0 %>
@@ -667,6 +669,7 @@ window_area = 0.0
       dsInsulR = <%= duct_insulation_r_value %>
       dsExH = <%= 1 / duct_air_film_r_value %>
       dsLeakF = <%= duct_leakage_fraction %>
+      dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
 <% end %>
 
