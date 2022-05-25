@@ -153,9 +153,9 @@ terrainClass = 2
 wuDays = 30
 skyModel = ANISOTROPIC
 skyModelLW = BERDAHLMARTIN
-soilCond = 0.8
-soilSpHt = 0.19
-soilDens = 94.0
+soilCond = 1.0      // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+soilSpHt = 0.1      // Specific heat, Btu/lb-F
+soilDens = 115.0    // Density, lb/ft3
 
 // Constructions
 // Material properties for exterior walls and doors from Table 7-4 in ASHRAE Standard 140-2011
