@@ -940,11 +940,16 @@ EXPORT
   EXPORTCOL colHead="Attic Cooling Seasonal Temp [F]" colVal=select(@rsysres["Main Zone HVAC System"].S.qcSen < 0, @znres["Attic Zone"].S.tAir * @rsysres["Main Zone HVAC System"].S.hrsOn, default 0)
 
 // Heating seasonal data
-  EXPORTCOL colHead="Rsysres Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qh
-  EXPORTCOL colHead="Rsysres Heating Hours On [hr]" colVal=select(@rsysres["Main Zone HVAC System"].S.qh > 0, @rsysres["Main Zone HVAC System"].S.hrsOn ,default 0)
+//  EXPORTCOL colHead="Rsysres Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qh
+  EXPORTCOL colHead="Rsysres Primary Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qhPrimary
+  EXPORTCOL colHead="Rsysres Defrost Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qhDefrost
+  EXPORTCOL colHead="Rsysres Aux Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qhAux
+  EXPORTCOL colHead="Rsysres Fan Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qhFan
+  EXPORTCOL colHead="Rsysres Net Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qhNet
+//  EXPORTCOL colHead="Rsysres Heating Hours On [hr]" colVal=select(@rsysres["Main Zone HVAC System"].S.qh > 0, @rsysres["Main Zone HVAC System"].S.hrsOn ,default 0)
   <% if foundation_type == "BASEMENT" %>
   EXPORTCOL colHead="Basement Temp [F]" colVal=@znres["Basement Zone"].S.tAir
-  EXPORTCOL colHead="Basement Heating Seasonal Temp [F]" colVal=select(@rsysres["Main Zone HVAC System"].S.qh > 0, @znres["Basement Zone"].S.tAir * @rsysres["Main Zone HVAC System"].S.hrsOn, default 0)
+//  EXPORTCOL colHead="Basement Heating Seasonal Temp [F]" colVal=select(@rsysres["Main Zone HVAC System"].S.qh > 0, @znres["Basement Zone"].S.tAir * @rsysres["Main Zone HVAC System"].S.hrsOn, default 0)
   <% end %>
 
   EXPORTCOL colHead="Rsysres Hours On [hr]" colVal=@rsysres["Main Zone HVAC System"].S.hrsOn
