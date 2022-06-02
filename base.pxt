@@ -868,7 +868,7 @@ EXPORT
   // Cooling
   EXPORTCOL colHead="Basement Cooling Load [J]" colVal=-@znRes["Basement Zone"].H.qcMech*<%= btu_j %>
 
-  EXPORTCOL colHead="Basement Inf Load [J]" colVal=@znRes["Main Zone"].H.qsInfil*<%= btu_j %>
+  EXPORTCOL colHead="Basement Inf Load [J]" colVal=@znRes["Basement Zone"].H.qsInfil*<%= btu_j %>
 
 <% end %>
 
@@ -899,7 +899,11 @@ EXPORT
   EXPORTCOL colHead="Annual Heating Total [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
   <% end %>
 <% else %>
+  <% if foundation_type == "BASEMENT" and basement_conditioned %>
+  EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=(@znRes["Main Zone"].Y.qhMech + @znRes["Basement Zone"].Y.qhMech)/1000000
+  <% else %>
   EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qhMech/1000000
+  <% end %>
 <% end %>
 
   // Cooling
