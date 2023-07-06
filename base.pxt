@@ -45,8 +45,10 @@
   parameter "supply_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as supply duct area
   parameter "return_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as return duct area
   parameter "duct_zone", :default=>"Main Zone" # zone where supply and return ducts are located
-  parameter "duct_insulation_r_value", :default=>0 # R-value of duct insulation without air film
-  parameter "duct_air_film_r_value", :default=>1.5 # R-value of exterior air film for duct (or duct insulation)
+  parameter "duct_insulation_r_value_supply", :default=>0 # R-value of duct insulation without air film
+  parameter "duct_air_film_r_value_supply", :default=>1.7 # R-value of exterior air film for duct (or duct insulation)
+  parameter "duct_insulation_r_value_return", :default=>0 # R-value of duct insulation without air film
+  parameter "duct_air_film_r_value_return", :default=>1.7 # R-value of exterior air film for duct (or duct insulation)
   parameter "duct_leakage_flow", :default=>0 # combined cfm airflow leaking out of supply + return ducts
   parameter "duct_exterior_emittance", :default=>0 # Exposed (i.e. insulation) outside surface exterior long wave (thermal) emittance
 
@@ -653,8 +655,8 @@ window_area = 0.0
       dsExArea = <%= supply_duct_area %>
       dsExCnd = ADJZN
       dsAdjZn = "<%= duct_zone %>"
-      dsInsulR = <%= duct_insulation_r_value %>
-      dsExH = <%= 1 / duct_air_film_r_value %>
+      dsInsulR = <%= duct_insulation_r_value_supply %>
+      dsExH = <%= 1 / duct_air_film_r_value_supply %>
       dsLeakF = <%= duct_leakage_fraction %>
       dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
@@ -666,8 +668,8 @@ window_area = 0.0
       dsExArea = <%= return_duct_area %>
       dsExCnd = ADJZN
       dsAdjZn = "<%= duct_zone %>"
-      dsInsulR = <%= duct_insulation_r_value %>
-      dsExH = <%= 1 / duct_air_film_r_value %>
+      dsInsulR = <%= duct_insulation_r_value_return %>
+      dsExH = <%= 1 / duct_air_film_r_value_return %>
       dsLeakF = <%= duct_leakage_fraction %>
       dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
