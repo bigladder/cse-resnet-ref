@@ -8,7 +8,5 @@
 :supply_duct_area_fraction=>0.2,
 :return_duct_area_fraction=>0.05,
 :duct_zone=>"Basement Zone",
-:duct_insulation_r_value_supply=>0,
-:duct_air_film_r_value_supply=>0.5619*6+2.2438,
-:duct_insulation_r_value_return=>0,
-:duct_air_film_r_value_return=>0.7053*6+2.0388
+:duct_insulation_r_value_supply=>6,
+:duct_insulation_r_value_return=>6
