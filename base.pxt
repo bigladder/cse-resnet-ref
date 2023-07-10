@@ -77,6 +77,14 @@ def c_f(c)
   return c*9/5.0 + 32.0
 end
 
+def calculate_duct_air_film_r_value(duct_insulation_r_value,duct_type)
+  if duct_type == "SUPPLY"
+    return 2.2438 - 0.4381 * duct_insulation_r_value
+  elsif duct_type == "RETURN"
+    return 2.0388 - 0.2947 * duct_insulation_r_value
+  end
+end
+
 # Internal use
 nsteps = 6
 
@@ -649,6 +657,9 @@ window_area = 0.0
     rsVFPerTon = <%= fan_flow_per_cap %>
 
   <% if supply_duct_area > 0 %>
+    <% if duct_insulation_r_value_supply > 0 %>
+      <% duct_air_film_r_value_supply = calculate_duct_air_film_r_value(duct_insulation_r_value_supply,"SUPPLY") %>
+    <% end %>
   // Main Zone Supply Duct
     DUCTSEG "Main Zone Supply Duct"
       dsTy = SUPPLY
@@ -662,6 +673,9 @@ window_area = 0.0
   <% end %>
 
   <% if return_duct_area > 0 %>
+    <% if duct_insulation_r_value_return > 0 %>
+      <% duct_air_film_r_value_return = calculate_duct_air_film_r_value(duct_insulation_r_value_return,"RETURN") %>
+    <% end %>
   // Main Zone Return Duct
     DUCTSEG "Main Zone Return Duct"
       dsTy = Return
