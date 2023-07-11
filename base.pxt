@@ -45,10 +45,8 @@
   parameter "supply_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as supply duct area
   parameter "return_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as return duct area
   parameter "duct_zone", :default=>"Main Zone" # zone where supply and return ducts are located
-  parameter "duct_insulation_r_value_supply", :default=>0 # R-value of duct insulation without air film
-  parameter "duct_air_film_r_value_supply", :default=>1.7 # R-value of exterior air film for duct (or duct insulation)
-  parameter "duct_insulation_r_value_return", :default=>0 # R-value of duct insulation without air film
-  parameter "duct_air_film_r_value_return", :default=>1.7 # R-value of exterior air film for duct (or duct insulation)
+  parameter "duct_insulation_r_value_supply", :default=>0 # R-value of supply duct insulation without air film
+  parameter "duct_insulation_r_value_return", :default=>0 # R-value of return duct insulation without air film
   parameter "duct_leakage_flow", :default=>0 # combined cfm airflow leaking out of supply + return ducts
   parameter "duct_exterior_emittance", :default=>0 # Exposed (i.e. insulation) outside surface exterior long wave (thermal) emittance
 
@@ -78,10 +76,14 @@ def c_f(c)
 end
 
 def calculate_duct_air_film_r_value(duct_insulation_r_value,duct_type)
-  if duct_type == "SUPPLY"
-    return 2.2438 - 0.4381 * duct_insulation_r_value
-  elsif duct_type == "RETURN"
-    return 2.0388 - 0.2947 * duct_insulation_r_value
+  if duct_insulation_r_value == 0
+    return 1.7
+  else
+    if duct_type == "SUPPLY"
+      return 2.2438 - 0.4381 * duct_insulation_r_value
+    elsif duct_type == "RETURN"
+      return 2.0388 - 0.2947 * duct_insulation_r_value
+    end
   end
 end
 
@@ -657,9 +659,7 @@ window_area = 0.0
     rsVFPerTon = <%= fan_flow_per_cap %>
 
   <% if supply_duct_area > 0 %>
-    <% if duct_insulation_r_value_supply > 0 %>
-      <% duct_air_film_r_value_supply = calculate_duct_air_film_r_value(duct_insulation_r_value_supply,"SUPPLY") %>
-    <% end %>
+    <% duct_air_film_r_value_supply = calculate_duct_air_film_r_value(duct_insulation_r_value_supply,"SUPPLY") %>
   // Main Zone Supply Duct
     DUCTSEG "Main Zone Supply Duct"
       dsTy = SUPPLY
@@ -673,9 +673,7 @@ window_area = 0.0
   <% end %>
 
   <% if return_duct_area > 0 %>
-    <% if duct_insulation_r_value_return > 0 %>
-      <% duct_air_film_r_value_return = calculate_duct_air_film_r_value(duct_insulation_r_value_return,"RETURN") %>
-    <% end %>
+    <% duct_air_film_r_value_return = calculate_duct_air_film_r_value(duct_insulation_r_value_return,"RETURN") %>
   // Main Zone Return Duct
     DUCTSEG "Main Zone Return Duct"
       dsTy = Return
