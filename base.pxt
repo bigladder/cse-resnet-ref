@@ -53,6 +53,7 @@
 # Testing
   parameter "isolate_attic", :default=>false
   parameter "interior_walls", :default=>true
+  parameter "add_seasonal_temp_outputs", :default=>false # creates CSV for seasonal temp outputs related to ASHRAE 152 calcs of seasonal DSE
 %>
 
 <%
@@ -153,9 +154,9 @@ terrainClass = 2
 wuDays = 30
 skyModel = ANISOTROPIC
 skyModelLW = BERDAHLMARTIN
-soilCond = 0.8
-soilSpHt = 0.19
-soilDens = 94.0
+soilCond = 1.0      // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+soilSpHt = 0.1      // Specific heat, Btu/lb-F
+soilDens = 115.0    // Density, lb/ft3
 
 // Constructions
 // Material properties for exterior walls and doors from Table 7-4 in ASHRAE Standard 140-2011
@@ -868,7 +869,7 @@ EXPORT
   // Cooling
   EXPORTCOL colHead="Basement Cooling Load [J]" colVal=-@znRes["Basement Zone"].H.qcMech*<%= btu_j %>
 
-  EXPORTCOL colHead="Basement Inf Load [J]" colVal=@znRes["Main Zone"].H.qsInfil*<%= btu_j %>
+  EXPORTCOL colHead="Basement Inf Load [J]" colVal=@znRes["Basement Zone"].H.qsInfil*<%= btu_j %>
 
 <% end %>
 
@@ -899,7 +900,11 @@ EXPORT
   EXPORTCOL colHead="Annual Heating Total [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
   <% end %>
 <% else %>
+  <% if foundation_type == "BASEMENT" and basement_conditioned %>
+  EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=(@znRes["Main Zone"].Y.qhMech + @znRes["Basement Zone"].Y.qhMech)/1000000
+  <% else %>
   EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qhMech/1000000
+  <% end %>
 <% end %>
 
   // Cooling
@@ -915,7 +920,7 @@ EXPORTFILE "Seasonal Temperatures"
   xfFileName = "Seasonal Temperatures.csv"
   xfFileStat = OVERWRITE
 
-<% if hvac_model == "DETAILED" %>
+<% if hvac_model == "DETAILED" and add_seasonal_temp_outputs %>
 // Use following export file to calculate annual seasonal temperature for ASHRAE 152 calculations of seasonal DSE
 // Seasonal temperatures are from attic for cooling and from basement for heating
 
@@ -940,18 +945,22 @@ EXPORT
   EXPORTCOL colHead="Attic Cooling Seasonal Temp [F]" colVal=select(@rsysres["Main Zone HVAC System"].S.qcSen < 0, @znres["Attic Zone"].S.tAir * @rsysres["Main Zone HVAC System"].S.hrsOn, default 0)
 
 // Heating seasonal data
-  EXPORTCOL colHead="Rsysres Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qh
-  EXPORTCOL colHead="Rsysres Heating Hours On [hr]" colVal=select(@rsysres["Main Zone HVAC System"].S.qh > 0, @rsysres["Main Zone HVAC System"].S.hrsOn ,default 0)
+  EXPORTCOL colHead="Rsysres Primary Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qhPrimary
+  EXPORTCOL colHead="Rsysres Defrost Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qhDefrost
+  EXPORTCOL colHead="Rsysres Aux Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qhAux
+  EXPORTCOL colHead="Rsysres Fan Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qhFan
+  EXPORTCOL colHead="Rsysres Net Heating [Btu]" colVal=@rsysres["Main Zone HVAC System"].S.qhNet
+  EXPORTCOL colHead="Rsysres Heating Hours On [hr]" colVal=select(@rsysres["Main Zone HVAC System"].S.qhNet > 0, @rsysres["Main Zone HVAC System"].S.hrsOn ,default 0)
   <% if foundation_type == "BASEMENT" %>
   EXPORTCOL colHead="Basement Temp [F]" colVal=@znres["Basement Zone"].S.tAir
-  EXPORTCOL colHead="Basement Heating Seasonal Temp [F]" colVal=select(@rsysres["Main Zone HVAC System"].S.qh > 0, @znres["Basement Zone"].S.tAir * @rsysres["Main Zone HVAC System"].S.hrsOn, default 0)
+  EXPORTCOL colHead="Basement Heating Seasonal Temp [F]" colVal=select(@rsysres["Main Zone HVAC System"].S.qhNet > 0, @znres["Basement Zone"].S.tAir * @rsysres["Main Zone HVAC System"].S.hrsOn, default 0)
   <% end %>
 
   EXPORTCOL colHead="Rsysres Hours On [hr]" colVal=@rsysres["Main Zone HVAC System"].S.hrsOn
   EXPORTCOL colHead="Attic Seasonal Temp [F]" colVal=@znres["Attic Zone"].S.tAir * @rsysres["Main Zone HVAC System"].S.hrsOn
-<% if foundation_type == "BASEMENT" %>
+  <% if foundation_type == "BASEMENT" %>
   EXPORTCOL colHead="Basement Seasonal Temp [F]" colVal=@znres["Basement Zone"].S.tAir * @rsysres["Main Zone HVAC System"].S.hrsOn
-    <% end %>
+  <% end %>
 <% end %>
 
 /*
