@@ -368,7 +368,6 @@ FOUNDATION "Slab Foundation"
   FNDBLOCK "Exterior Vertical Insulation"
     fbMat="Slab Insulation"
     fbX1Ref=WALLEXT
-    fbX2Ref=WALLEXT
     fbX2=0'1
     fbZ2=2
 
