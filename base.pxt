@@ -81,9 +81,9 @@ def calculate_duct_air_film_r_value(duct_insulation_r_value,duct_type)
     return 1.7
   else
     if duct_type == "SUPPLY"
-      return 2.2438 - 0.4381 * duct_insulation_r_value
+      return 2.2438 + 0.5619 * duct_insulation_r_value
     elsif duct_type == "RETURN"
-      return 2.0388 - 0.2947 * duct_insulation_r_value
+      return 2.0388 + 0.7053 * duct_insulation_r_value
     end
   end
 end
