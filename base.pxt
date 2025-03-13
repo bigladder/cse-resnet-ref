@@ -398,17 +398,12 @@ FOUNDATION "Basement Foundation"
 
 
   <% if foundation_insulated %>
-  FNDBLOCK "Interior Vertical Insulation"
-    fbMat="R-11 Fiberglass Batt, 16 in o.c."
-    fbZ2Ref=SLABTOP
-    fbX2=-0'3.5
-
-  FNDBLOCK "Interior Vertical Plasterboard"
-    fbMat="Plasterboard"
-    fbZ2Ref=SLABTOP
-    fbX1=-0'3.5
-    fbX2=-0'4
-
+    <% basement_wall = "Basement Wall" %>
+  CONSTRUCTION "Basement Wall"
+    LAYER lrMat="Plasterboard" lrThk= 0'0.5
+    LAYER lrMat="R-11 Fiberglass Batt, 16 in o.c." lrThk= 0'3.5
+  <% else %>
+    <% basement_wall = nil %>
   <% end %>
 <% end %>
 
@@ -748,10 +743,10 @@ ZONE "Basement Zone"
     {:name=>"West Basement Sill Plate",:type=>"Wall",:area=>sill_plate_height*depth,:azm=>270,:ext_cond=>"Ambient",:con=>"Sill Plate"},
     {:name=>"North Basement Sill Plate",:type=>"Wall",:area=>sill_plate_height*width,:azm=>0,:ext_cond=>"Ambient",:con=>"Sill Plate"},
     {:name=>"South Basement Sill Plate",:type=>"Wall",:area=>sill_plate_height*width,:azm=>180,:ext_cond=>"Ambient",:con=>"Sill Plate"},
-    {:name=>"East Basement Wall",:type=>"Wall",:area=>basement_wall_height*depth,:azm=>90,:ext_cond=>"Ground",:con=>"Basement Wall"},
-    {:name=>"West Basement Wall",:type=>"Wall",:area=>basement_wall_height*depth,:azm=>270,:ext_cond=>"Ground",:con=>"Basement Wall"},
-    {:name=>"North Basement Wall",:type=>"Wall",:area=>basement_wall_height*width,:azm=>0,:ext_cond=>"Ground",:con=>"Basement Wall"},
-    {:name=>"South Basement Wall",:type=>"Wall",:area=>basement_wall_height*width,:azm=>180,:ext_cond=>"Ground",:con=>"Basement Wall"},
+    {:name=>"East Basement Wall",:type=>"Wall",:area=>basement_wall_height*depth,:azm=>90,:ext_cond=>"Ground",:con=>basement_wall},
+    {:name=>"West Basement Wall",:type=>"Wall",:area=>basement_wall_height*depth,:azm=>270,:ext_cond=>"Ground",:con=>basement_wall},
+    {:name=>"North Basement Wall",:type=>"Wall",:area=>basement_wall_height*width,:azm=>0,:ext_cond=>"Ground",:con=>basement_wall},
+    {:name=>"South Basement Wall",:type=>"Wall",:area=>basement_wall_height*width,:azm=>180,:ext_cond=>"Ground",:con=>basement_wall},
     {:name=>"Basement Floor",:type=>"Floor",:area=>depth*width,:ext_cond=>"Ground",:con=>"Floor Slab"}
   ]
   %>
@@ -775,7 +770,9 @@ ZONE "Basement Zone"
     sfType = "<%= surface[:type] %>"
     sfArea = <%= surface[:area] %>
     sfExCnd = "<%= surface[:ext_cond] %>"
+    <% if surface[:con] != nil %>
     sfCon = "<%= surface[:con] %>"
+    <% end %>
     sfExAbs = <%= ext_sol_abs_exposed %>
     sfInAbs = <%= int_sol_abs %>
     sfExEpsLW = <%= ext_lw_abs %>
