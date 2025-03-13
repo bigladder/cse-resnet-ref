@@ -390,7 +390,7 @@ CONSTRUCTION "Sill Plate"
   LAYER lrMat="Fiberboard Sheathing" lrThk= 0'0.5
   LAYER lrMat="Hardboard Siding" lrThk= 0'(7/16)
 
-CONSTRUCTION "Basement Wall"
+CONSTRUCTION "Foundation Wall"
   LAYER lrMat="Poured Concrete" lrThk=0'6
 
 FOUNDATION "Basement Foundation"
