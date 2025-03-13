@@ -361,8 +361,8 @@ CONSTRUCTION "Foundation Footing"
 
 FOUNDATION "Slab Foundation"
   fdWlHtAbvGrd=0'4
-  fdWlDpBlwSlb=0'20
-  fdFtCon="Foundation Footing"
+  fdWlDpBlwSlb=0'24.5
+  fdWlCon="Foundation Footing"
 
   <% if foundation_insulated %>
   FNDBLOCK "Exterior Vertical Insulation"
@@ -395,7 +395,8 @@ CONSTRUCTION "Foundation Wall"
 
 FOUNDATION "Basement Foundation"
   fdWlHtAbvGrd=<%= basement_above_grade %>
-  fdWlDpBlwSlb=0
+  fdWlCon="Foundation Wall"
+
 
   <% if foundation_insulated %>
   FNDBLOCK "Interior Vertical Insulation"
