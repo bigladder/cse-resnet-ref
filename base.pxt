@@ -103,12 +103,12 @@ floor_area = width*depth # Floor area for both conditioned and attic zones in sq
 zone_vol_cond = floor_area*height_cond # Conditioned zone volume in cubic feet
 zone_vol_attic = 0.5*floor_area*height_attic # Unconditioned attic zone volume in cubic feet
 
-sill_plate_hieght = 1.5/12.0 # [ft]
-rim_joist_hieght = 7.5/12.0 # [ft]
+sill_plate_height = 1.5/12.0 # [ft]
+rim_joist_height = 7.5/12.0 # [ft]
 basement_below_grade = 6 + 7.0/12.0 # [ft]
 basement_above_grade = 8.0/12.0 # [ft]
 basement_wall_height = basement_above_grade + basement_below_grade
-zone_vol_bsmt = floor_area*(sill_plate_hieght + rim_joist_hieght + basement_wall_height) # Conditioned attic zone volume in cubic feet
+zone_vol_bsmt = floor_area*(sill_plate_height + rim_joist_height + basement_wall_height) # Conditioned attic zone volume in cubic feet
 
 win_width = 3.0 # Window width [ft]
 win_height = 5.0 # Window height [ft]
@@ -361,14 +361,13 @@ CONSTRUCTION "Foundation Footing"
 
 FOUNDATION "Slab Foundation"
   fdWlHtAbvGrd=0'4
-  fdWlDpBlwSlb=0'20
-  fdFtCon="Foundation Footing"
+  fdWlDpBlwSlb=0'24.5
+  fdWlCon="Foundation Footing"
 
   <% if foundation_insulated %>
   FNDBLOCK "Exterior Vertical Insulation"
     fbMat="Slab Insulation"
     fbX1Ref=WALLEXT
-    fbX2Ref=WALLEXT
     fbX2=0'1
     fbZ2=2
 
@@ -390,25 +389,21 @@ CONSTRUCTION "Sill Plate"
   LAYER lrMat="Fiberboard Sheathing" lrThk= 0'0.5
   LAYER lrMat="Hardboard Siding" lrThk= 0'(7/16)
 
-CONSTRUCTION "Basement Wall"
+CONSTRUCTION "Foundation Wall"
   LAYER lrMat="Poured Concrete" lrThk=0'6
 
 FOUNDATION "Basement Foundation"
   fdWlHtAbvGrd=<%= basement_above_grade %>
-  fdWlDpBlwSlb=0
+  fdWlCon="Foundation Wall"
+
 
   <% if foundation_insulated %>
-  FNDBLOCK "Interior Vertical Insulation"
-    fbMat="R-11 Fiberglass Batt, 16 in o.c."
-    fbZ2Ref=SLABTOP
-    fbX2=-0'3.5
-
-  FNDBLOCK "Interior Vertical Plasterboard"
-    fbMat="Plasterboard"
-    fbZ2Ref=SLABTOP
-    fbX1=-0'3.5
-    fbX2=-0'4
-
+    <% basement_wall = "Basement Wall" %>
+  CONSTRUCTION "Basement Wall"
+    LAYER lrMat="Plasterboard" lrThk= 0'0.5
+    LAYER lrMat="R-11 Fiberglass Batt, 16 in o.c." lrThk= 0'3.5
+  <% else %>
+    <% basement_wall = nil %>
   <% end %>
 <% end %>
 
@@ -740,18 +735,18 @@ ZONE "Basement Zone"
   # Surfaces in Unconditioned Attic Zone
   # Constructions for gable walls and roofs are continuous without framing
   surfaces_bsmt = [
-    {:name=>"East Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*depth,:azm=>90,:ext_cond=>"Ambient",:con=>"Rim Joist"},
-    {:name=>"West Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*depth,:azm=>270,:ext_cond=>"Ambient",:con=>"Rim Joist"},
-    {:name=>"North Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*width,:azm=>0,:ext_cond=>"Ambient",:con=>"Rim Joist"},
-    {:name=>"South Basement Rim Joist",:type=>"Wall",:area=>rim_joist_hieght*width,:azm=>180,:ext_cond=>"Ambient",:con=>"Rim Joist"},
-    {:name=>"East Basement Sill Plate",:type=>"Wall",:area=>sill_plate_hieght*depth,:azm=>90,:ext_cond=>"Ambient",:con=>"Sill Plate"},
-    {:name=>"West Basement Sill Plate",:type=>"Wall",:area=>sill_plate_hieght*depth,:azm=>270,:ext_cond=>"Ambient",:con=>"Sill Plate"},
-    {:name=>"North Basement Sill Plate",:type=>"Wall",:area=>sill_plate_hieght*width,:azm=>0,:ext_cond=>"Ambient",:con=>"Sill Plate"},
-    {:name=>"South Basement Sill Plate",:type=>"Wall",:area=>sill_plate_hieght*width,:azm=>180,:ext_cond=>"Ambient",:con=>"Sill Plate"},
-    {:name=>"East Basement Wall",:type=>"Wall",:area=>basement_wall_height*depth,:azm=>90,:ext_cond=>"Ground",:con=>"Basement Wall"},
-    {:name=>"West Basement Wall",:type=>"Wall",:area=>basement_wall_height*depth,:azm=>270,:ext_cond=>"Ground",:con=>"Basement Wall"},
-    {:name=>"North Basement Wall",:type=>"Wall",:area=>basement_wall_height*width,:azm=>0,:ext_cond=>"Ground",:con=>"Basement Wall"},
-    {:name=>"South Basement Wall",:type=>"Wall",:area=>basement_wall_height*width,:azm=>180,:ext_cond=>"Ground",:con=>"Basement Wall"},
+    {:name=>"East Basement Rim Joist",:type=>"Wall",:area=>rim_joist_height*depth,:azm=>90,:ext_cond=>"Ambient",:con=>"Rim Joist"},
+    {:name=>"West Basement Rim Joist",:type=>"Wall",:area=>rim_joist_height*depth,:azm=>270,:ext_cond=>"Ambient",:con=>"Rim Joist"},
+    {:name=>"North Basement Rim Joist",:type=>"Wall",:area=>rim_joist_height*width,:azm=>0,:ext_cond=>"Ambient",:con=>"Rim Joist"},
+    {:name=>"South Basement Rim Joist",:type=>"Wall",:area=>rim_joist_height*width,:azm=>180,:ext_cond=>"Ambient",:con=>"Rim Joist"},
+    {:name=>"East Basement Sill Plate",:type=>"Wall",:area=>sill_plate_height*depth,:azm=>90,:ext_cond=>"Ambient",:con=>"Sill Plate"},
+    {:name=>"West Basement Sill Plate",:type=>"Wall",:area=>sill_plate_height*depth,:azm=>270,:ext_cond=>"Ambient",:con=>"Sill Plate"},
+    {:name=>"North Basement Sill Plate",:type=>"Wall",:area=>sill_plate_height*width,:azm=>0,:ext_cond=>"Ambient",:con=>"Sill Plate"},
+    {:name=>"South Basement Sill Plate",:type=>"Wall",:area=>sill_plate_height*width,:azm=>180,:ext_cond=>"Ambient",:con=>"Sill Plate"},
+    {:name=>"East Basement Wall",:type=>"Wall",:area=>basement_wall_height*depth,:azm=>90,:ext_cond=>"Ground",:con=>basement_wall},
+    {:name=>"West Basement Wall",:type=>"Wall",:area=>basement_wall_height*depth,:azm=>270,:ext_cond=>"Ground",:con=>basement_wall},
+    {:name=>"North Basement Wall",:type=>"Wall",:area=>basement_wall_height*width,:azm=>0,:ext_cond=>"Ground",:con=>basement_wall},
+    {:name=>"South Basement Wall",:type=>"Wall",:area=>basement_wall_height*width,:azm=>180,:ext_cond=>"Ground",:con=>basement_wall},
     {:name=>"Basement Floor",:type=>"Floor",:area=>depth*width,:ext_cond=>"Ground",:con=>"Floor Slab"}
   ]
   %>
@@ -775,7 +770,9 @@ ZONE "Basement Zone"
     sfType = "<%= surface[:type] %>"
     sfArea = <%= surface[:area] %>
     sfExCnd = "<%= surface[:ext_cond] %>"
+    <% if surface[:con] != nil %>
     sfCon = "<%= surface[:con] %>"
+    <% end %>
     sfExAbs = <%= ext_sol_abs_exposed %>
     sfInAbs = <%= int_sol_abs %>
     sfExEpsLW = <%= ext_lw_abs %>
