@@ -213,7 +213,7 @@ MATERIAL "Polyisocyanurate board insulation"       // 1-in. thickness
 MATERIAL "Carpet with Fibrous Pad"
   matCond = 0.020       // No conductivity specified in Table 7-5, assumed carpet pad is 0.5" thick and calculated conductivity to reach desired U-value of 0.481 Btu/hr/ft2/F for this material layer
   matDens = 3.4         // Density, lb/ft3 - Not specified in Table 7-5
-  matSpHt = 0.32        // Specific heat of material, Btu/lb-F - Not specified in Table 7-5
+  matSpHt = 0.34        // Specific heat of material, Btu/lb-F - Not specified in Table 7-5
 
 MATERIAL "Poured Concrete"
   matCond = 1.0417             // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
