@@ -674,7 +674,7 @@ ZONE "Attic Zone"
   znModel = UZX
   znArea = <%= floor_area %>
   znVol = <%= zone_vol_attic %>
-  znCAir = 0.01 // taken from CBECC-Res
+  znCAir = <%= 0.24*0.077*zone_vol_attic %>
   infAC = <%= ach_attic %>
   znEaveZ = <%= height_cond %>
 <%
@@ -731,6 +731,7 @@ ZONE "Basement Zone"
   <% end %>
   znHcAirX = 0.0 // Remove +4.8 ACH assumed for non-RSYS zones
   infAC = 0.0
+  znCAir = <%= 0.24*0.077*zone_vol_bsmt %>
   <%
   # Surfaces in Unconditioned Attic Zone
   # Constructions for gable walls and roofs are continuous without framing
