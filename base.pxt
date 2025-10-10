@@ -157,7 +157,7 @@ skyModelLW = BERDAHLMARTIN
 
 // Soil Properties for cases L302B, L304B, L322B, and L324B from Tables B18-1, B18-2, B18-3, and B18-4 in ASHRAE Standard 140-2023
 
-soilCond = 0.8     // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
+soilCond = 1.0     // Conductivity (always per foot of thickness), Btuh-ft/ft2-F
 soilSpHt = 0.19    // Specific heat, Btu/lb-F
 soilDens = 94.0    // Density, lb/ft3
 
