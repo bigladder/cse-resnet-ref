@@ -39,8 +39,8 @@
   parameter "heating_cap", :default=>56100 # heating capacity, Btu/hr, default from HVAC2a gas furnace capacity
   parameter "afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
   parameter "cooling_cap", :default=>38300 # cooling capacity, Btu/hr, default from HVAC1a DX capacity
-  parameter "seer", :default=>10.0 # DX cooling SEER
-  parameter "hspf", :default=>6.8 # Heating Seasonal Performance Factor for ASHPPM
+  parameter "seer2", :default=>9.5 # DX cooling SEER2
+  parameter "hspf2", :default=>5.78 # Heating Seasonal Performance Factor for ASHPPM
   parameter "compressor_speed_type", :default=>"SINGLE_STAGE" # Number of compressor stages, choices: SINGLE | TWO | VARIABLE
   parameter "fan_motor_type", :default=>"PSC" # Fan Motor Type for blower system 
   parameter "fan_flow_per_cap", :default=>360 # Air flow rate as cfm per ton of heat/cool capacity, per Table 4.4.3(1)
@@ -125,7 +125,7 @@ overhang_height = 1.0 # Height of gap between top of window and bottom of overha
 supply_duct_area = supply_duct_area_fraction * floor_area
 return_duct_area = return_duct_area_fraction * floor_area
 
-if seer >= 14
+if seer2 >= 13.3
   cooling_fan_power_per_flow = 0.375 # high-efficiency fan power per flow, per Table 4.4.3(1)
 else
   cooling_fan_power_per_flow = 0.5 # standard fan power per flow, per Table 4.4.3(1)
@@ -634,9 +634,9 @@ window_area = 0.0
   <%
 
   if climate == "HEATING"
-    seer = 12.35
+    seer2 = 12.35
   elsif climate == "COOLING"
-    hspf = 6.55
+    hspf2 = 6.55
   end
   
 
@@ -644,9 +644,7 @@ window_area = 0.0
 
   <%
   
-  eer = 10.7
-
-  cli_command = "uv run python get_air_source_heat_pump_performance_map.py #{cooling_cap} #{heating_cap} #{compressor_speed_type} #{seer} #{hspf} #{eer}"
+  cli_command = "uv run python get_air_source_heat_pump_performance_map.py #{compressor_speed_type} #{cooling_cap} #{heating_cap} #{seer2} #{hspf2}"
 
   run_command = `#{cli_command}`
 
@@ -664,7 +662,7 @@ window_area = 0.0
     rsFuelMtr = "Gas Meter"
     rsFanPwrC = <%= cooling_fan_power_per_flow %>
     rsCapC = <%= cooling_cap %>
-    rsSEER = <%= seer %>
+    rsSEER = <%= seer2 / 0.95 %>
     rsFanPwrH = <%= heating_fan_power_per_flow %>
     rsFanMotTy = <%= fan_motor_type %>
   <% if hvac_type == "ACPMFURNACE" or hvac_type == "ACPMRESISTANCE"%>
@@ -672,12 +670,9 @@ window_area = 0.0
     rsCapH = <%= heating_cap %>
     rsPerfMapClg = "RSYS Cooling Performance Map"
   <% elsif hvac_type == "ASHPPM" %>
+    rsCap47 = <%= heating_cap %>
     rsPerfMapHtg = "RSYS Heating Performance Map"
     rsPerfMapClg = "RSYS Cooling Performance Map"
-    
-
-    rsHSPF = <%= hspf %>
-    rsCap47 = <%= heating_cap %>
   <% end %>
     rsVFPerTon = <%= fan_flow_per_cap %>
 
