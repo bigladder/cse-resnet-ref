@@ -2,4 +2,4 @@
 :climate=>"HEATING",
 :hvac_model=>"DETAILED",
 :heating_cap=>56100,
-:hvac_type=>"ASHP"
+:hvac_type=>"ASHPPM"

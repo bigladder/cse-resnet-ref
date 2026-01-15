@@ -35,12 +35,14 @@
   parameter "raised_floor_insulated", :default=>true # whether main zone floor includes cavity insulation
   parameter "raised_floor_framed", :default=>true # whether main zone floor includes wood framing
   parameter "hvac_model", :default=>"SIMPLE" # whether zones are conditioned by RSYS object "DETAILED" or imaginary znQMx members "SIMPLE"
-  parameter "hvac_type", :default=>"ACFURNACE" # heat/cool type, choices: ACFURNACE | ASHP | ACRESISTANCE
+  parameter "hvac_type", :default=>"ACPMFURNACE" # heat/cool type, choices: ACPMFURNACE | ASHPPM | ACPMRESISTANCE
   parameter "heating_cap", :default=>56100 # heating capacity, Btu/hr, default from HVAC2a gas furnace capacity
   parameter "afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
   parameter "cooling_cap", :default=>38300 # cooling capacity, Btu/hr, default from HVAC1a DX capacity
-  parameter "seer", :default=>10 # DX cooling SEER
-  parameter "hspf", :default=>6.8 # Heating Seasonal Performance Factor for ASHP
+  parameter "seer", :default=>10.0 # DX cooling SEER
+  parameter "hspf", :default=>6.8 # Heating Seasonal Performance Factor for ASHPPM
+  parameter "compressor_speed_type", :default=>"SINGLE_STAGE" # Number of compressor stages, choices: SINGLE | TWO | VARIABLE
+  parameter "fan_motor_type", :default=>"PSC" # Fan Motor Type for blower system 
   parameter "fan_flow_per_cap", :default=>360 # Air flow rate as cfm per ton of heat/cool capacity, per Table 4.4.3(1)
   parameter "supply_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as supply duct area
   parameter "return_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as return duct area
@@ -71,6 +73,7 @@ btu_j = h_s/w_btu
 k_r = 9/5.0
 q_c = w_btu/m2_ft2
 u_c = q_c/k_r
+kilo_base = 1000.0
 
 def c_f(c)
   return c*9/5.0 + 32.0
@@ -627,6 +630,33 @@ window_area = 0.0
 <% end %>
 
 <% if hvac_model == "DETAILED" %>
+
+  <%
+
+  if climate == "HEATING"
+    seer = 12.35
+  elsif climate == "COOLING"
+    hspf = 6.55
+  end
+  
+
+  %>
+
+  <%
+  
+  eer = 10.7
+
+  cli_command = "uv run python get_air_source_heat_pump_performance_map.py #{cooling_cap} #{heating_cap} #{compressor_speed_type} #{seer} #{hspf} #{eer}"
+
+  run_command = `#{cli_command}`
+
+  performance_map = run_command.strip
+
+  %>
+
+  <%= performance_map %>
+
+
 // Main Zone HVAC System
   RSYS "Main Zone HVAC System"
     rsType = <%= hvac_type %>
@@ -636,10 +666,16 @@ window_area = 0.0
     rsCapC = <%= cooling_cap %>
     rsSEER = <%= seer %>
     rsFanPwrH = <%= heating_fan_power_per_flow %>
-  <% if hvac_type == "ACFURNACE" or hvac_type == "ACRESISTANCE" %>
+    rsFanMotTy = <%= fan_motor_type %>
+  <% if hvac_type == "ACPMFURNACE" or hvac_type == "ACPMRESISTANCE"%>
     rsAFUE = <%= afue %>
     rsCapH = <%= heating_cap %>
-  <% elsif hvac_type == "ASHP" %>
+    rsPerfMapClg = "RSYS Cooling Performance Map"
+  <% elsif hvac_type == "ASHPPM" %>
+    rsPerfMapHtg = "RSYS Heating Performance Map"
+    rsPerfMapClg = "RSYS Cooling Performance Map"
+    
+
     rsHSPF = <%= hspf %>
     rsCap47 = <%= heating_cap %>
   <% end %>

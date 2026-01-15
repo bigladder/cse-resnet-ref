@@ -2,5 +2,5 @@
 :climate=>"HEATING",
 :hvac_model=>"DETAILED",
 :heating_cap=>56100,
-:hvac_type=>"ACRESISTANCE",
+:hvac_type=>"ACPMRESISTANCE",
 :afue=>1.0
