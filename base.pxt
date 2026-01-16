@@ -894,17 +894,17 @@ EXPORT
   <% if ["HVAC2a", "HVAC2b", "HVAC3a", "HVAC3b", "HVAC3c", "HVAC3d"].include?(case_name) %>
   EXPORTCOL colHead="Annual Heating Equipment [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
   EXPORTCOL colHead="Annual Heating Fan [MBtu]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
-  EXPORTCOL colHead="Annual Heating Total [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
+  EXPORTCOL colHead="Annual Heating Total [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
   <% else %>
-  EXPORTCOL colHead="Annual Heating Equipment [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
-  EXPORTCOL colHead="Annual Heating Fan [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
-  EXPORTCOL colHead="Annual Heating Total [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
+  EXPORTCOL colHead="Annual Heating Equipment [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
+  EXPORTCOL colHead="Annual Heating Fan [MBtu]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
+  EXPORTCOL colHead="Annual Heating Total [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
   <% end %>
 <% else %>
   <% if foundation_type == "BASEMENT" and basement_conditioned %>
-  EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=(@znRes["Main Zone"].Y.qhMech + @znRes["Basement Zone"].Y.qhMech)/1000000
+  EXPORTCOL colHead="Annual Heating [MBtu]" colVal=(@znRes["Main Zone"].Y.qhMech + @znRes["Basement Zone"].Y.qhMech)/1000000
   <% else %>
-  EXPORTCOL colHead="Annual Heating [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qhMech/1000000
+  EXPORTCOL colHead="Annual Heating [MBtu]" colVal=@znRes["Main Zone"].Y.qhMech/1000000
   <% end %>
 <% end %>
 
