@@ -910,11 +910,11 @@ EXPORT
 
   // Cooling
 <% if hvac_model  == "DETAILED" %>
-  EXPORTCOL colHead="Annual Cooling Equipment [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg)/1000000
-  EXPORTCOL colHead="Annual Cooling Fan [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.fanC + @meter["Gas Meter"].Y.fanC)/1000000
-  EXPORTCOL colHead="Annual Cooling Total [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg + @meter["Elec Meter"].Y.fanC + @meter["Gas Meter"].Y.fanC)/1000000
+  EXPORTCOL colHead="Annual Cooling Equipment [MBtu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg)/1000000
+  EXPORTCOL colHead="Annual Cooling Fan [MBtu]" colVal=(@meter["Elec Meter"].Y.fanC + @meter["Gas Meter"].Y.fanC)/1000000
+  EXPORTCOL colHead="Annual Cooling Total [MBtu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg + @meter["Elec Meter"].Y.fanC + @meter["Gas Meter"].Y.fanC)/1000000
 <% else %>
-  EXPORTCOL colHead="Annual Cooling [10^6 Btu]" colVal=@znRes["Main Zone"].Y.qcMech/-1000000
+  EXPORTCOL colHead="Annual Cooling [MBtu]" colVal=@znRes["Main Zone"].Y.qcMech/-1000000
 <% end %>
 
 EXPORTFILE "Seasonal Temperatures"
