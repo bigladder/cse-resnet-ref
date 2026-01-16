@@ -671,6 +671,7 @@ window_area = 0.0
     rsPerfMapClg = "RSYS Cooling Performance Map"
   <% elsif hvac_type == "ASHPPM" %>
     rsCap47 = <%= heating_cap %>
+    rsHSPF = <%= hspf2 / 0.85 %>
     rsPerfMapHtg = "RSYS Heating Performance Map"
     rsPerfMapClg = "RSYS Cooling Performance Map"
   <% end %>
