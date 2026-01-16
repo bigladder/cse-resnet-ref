@@ -892,8 +892,8 @@ EXPORT
   // Heating
 <% if hvac_model  == "DETAILED" %>
   <% if ["HVAC2a", "HVAC2b", "HVAC3a", "HVAC3b", "HVAC3c", "HVAC3d"].include?(case_name) %>
-  EXPORTCOL colHead="Annual Heating Equipment [therm]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/100000
-  EXPORTCOL colHead="Annual Heating Fan [kWh]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/<%= w_btu %>/1000
+  EXPORTCOL colHead="Annual Heating Equipment [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
+  EXPORTCOL colHead="Annual Heating Fan [MBtu]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
   EXPORTCOL colHead="Annual Heating Total [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
   <% else %>
   EXPORTCOL colHead="Annual Heating Equipment [10^6 Btu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
