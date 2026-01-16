@@ -882,7 +882,7 @@ EXPORTFILE "Results"
 
 EXPORT
  	exExportfile = "Results"
-  exHeader = NO //ColumnsOnly
+  exHeader = COLUMNSONLYIFNEW
   exFooter = NO
   exType = UDT
   exFreq = YEAR
