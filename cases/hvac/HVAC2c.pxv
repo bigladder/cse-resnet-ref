@@ -2,4 +2,4 @@
 :climate=>"HEATING",
 :hvac_model=>"DETAILED",
 :heating_capacity=>56100,
-:hvac_type=>"ASHPPM"
+:heating_type=>"HEAT_PUMP"

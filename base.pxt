@@ -35,6 +35,7 @@
   parameter "raised_floor_insulated", :default=>true # whether main zone floor includes cavity insulation
   parameter "raised_floor_framed", :default=>true # whether main zone floor includes wood framing
   parameter "hvac_model", :default=>"SIMPLE" # whether zones are conditioned by RSYS object "DETAILED" or imaginary znQMx members "SIMPLE"
+  parameter "heating_type", :default=>"GAS_FURNACE" # heat/cool type, choices: GAS_FURNACE | HEAT_PUMP | ELECTRIC_FURNACE
   parameter "heating_capacity", :default=>56100 # heating capacity or heating capacity at 47°F, Btu/hr, default from HVAC2a gas furnace capacity
   parameter "afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
   parameter "cooling_capacity", :default=>38300 # cooling capacity, Btu/hr, default from HVAC1a DX capacity
@@ -142,6 +143,13 @@ if heating_capacity > 0 or cooling_capacity > 0
   end
 end
 
+if heating_type == "GAS_FURNACE"
+  rs_type = "ACPMFURNACE"
+elsif heating_type == "HEAT_PUMP"
+  rs_type = "ASHPPM"
+elsif heating_type == "ELECTRIC_FURNACE"
+  rs_type = "ACPMRESISTANCE"
+end
 %>
 
 wfName = "weather//<%= weather_file %>"
@@ -653,7 +661,7 @@ window_area = 0.0
 
 // Main Zone HVAC System
   RSYS "Main Zone HVAC System"
-    rsType = <%= hvac_type %>
+    rsType = <%= rs_type %>
     rsElecMtr = "Elec Meter"
     rsFuelMtr = "Gas Meter"
     rsFanPwrC = <%= cooling_fan_power_per_flow %>
@@ -661,11 +669,11 @@ window_area = 0.0
     rsSEER = <%= seer2 / 0.95 %>
     rsFanPwrH = <%= heating_fan_power_per_flow %>
     rsFanMotTy = <%= fan_motor_type %>
-  <% if hvac_type == "ACPMFURNACE" or hvac_type == "ACPMRESISTANCE"%>
+  <% if heating_type == "GAS_FURNACE" or heating_type == "ELECTRIC_FURNACE"%>
     rsAFUE = <%= afue %>
     rsCapH = <%= heating_capacity %>
     rsPerfMapClg = "RSYS Cooling Performance Map"
-  <% elsif hvac_type == "ASHPPM" %>
+  <% elsif heating_type == "HEAT_PUMP" %>
     rsCap47 = <%= heating_capacity %>
     rsHSPF = <%= hspf2 / 0.85 %>
     rsPerfMapHtg = "RSYS Heating Performance Map"

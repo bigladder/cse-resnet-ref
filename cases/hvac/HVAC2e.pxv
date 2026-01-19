@@ -2,5 +2,5 @@
 :climate=>"HEATING",
 :hvac_model=>"DETAILED",
 :heating_capacity=>56100,
-:hvac_type=>"ACPMRESISTANCE",
+:heating_type=>"ELECTRIC_FURNACE",
 :afue=>1.0
