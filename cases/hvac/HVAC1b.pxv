@@ -2,4 +2,5 @@
 :climate=>"COOLING",
 :hvac_model=>"DETAILED",
 :cooling_capacity=>38300,
-:seer2=>12.35
+:seer2=>12.4,
+:eer2=>10.756

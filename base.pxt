@@ -36,8 +36,13 @@
   parameter "hvac_model", :default=>"SIMPLE" # whether zones are conditioned by RSYS object "DETAILED" or imaginary znQMx members "SIMPLE"
   parameter "heating_type", :default=>"GAS_FURNACE" # heat/cool type, choices: GAS_FURNACE | HEAT_PUMP | ELECTRIC_FURNACE
   parameter "heating_capacity", :default=>56100 # heating capacity or heating capacity at 47°F, Btu/hr, default from HVAC2a gas furnace capacity
+  parameter "heating_capacity_17", :default=>35100 # heating capacity at 17°F, Btu/hr, default from HVAC2a gas furnace capacity
   parameter "afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
   parameter "cooling_capacity", :default=>38300 # cooling capacity, Btu/hr, default from HVAC1a DX capacity
+  parameter "seer2", :default=>9.50 # DX cooling SEER2
+  parameter "eer2", :default=>8.32 # DX cooling EER2
+  parameter "hspf2", :default=>5.78 # Heating Seasonal Performance Factor for HEAT_PUMP
+  parameter "compressor_speed_type", :default=>"SINGLE_STAGE" # Number of compressor stages, choices: SINGLE_STAGE | TWO_STAGE | VARIABLE_SPEED
   parameter "fan_motor_type", :default=>"PSC" # Fan Motor Type for blower system 
   parameter "fan_flow_per_cap", :default=>360 # Air flow rate as cfm per ton of heat/cool capacity, per Table 4.4.3(1)
   parameter "supply_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as supply duct area
