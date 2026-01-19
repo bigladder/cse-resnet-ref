@@ -637,18 +637,7 @@ window_area = 0.0
 
   <%
 
-  if climate == "HEATING"
-    seer2 = 12.35
-  elsif climate == "COOLING"
-    hspf2 = 6.55
-  end
-  
-
-  %>
-
-  <%
-  
-  cli_command = "uv run python get_air_source_heat_pump_performance_map.py #{compressor_speed_type} #{cooling_cap} #{heating_cap} #{seer2} #{hspf2}"
+  cli_command = "uv run python get_air_source_heat_pump_performance_map.py #{compressor_speed_type} #{cooling_capacity} #{heating_capacity} #{heating_capacity_17} #{seer2} #{eer2} #{hspf2}"
 
   run_command = `#{cli_command}`
 
