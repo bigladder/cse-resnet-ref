@@ -1,5 +1,5 @@
 :case_name=>"HVAC1b",
 :climate=>"COOLING",
 :hvac_model=>"DETAILED",
-:cooling_cap=>38300,
+:cooling_capacity=>38300,
 :seer2=>12.35

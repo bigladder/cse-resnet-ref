@@ -1,7 +1,7 @@
 :case_name=>"HVAC3g",
 :climate=>"COOLING",
 :hvac_model=>"DETAILED",
-:cooling_cap=>42200,
+:cooling_capacity=>42200,
 :supply_duct_area_fraction=>0.2,
 :return_duct_area_fraction=>0.05,
 :duct_zone=>"Attic Zone",

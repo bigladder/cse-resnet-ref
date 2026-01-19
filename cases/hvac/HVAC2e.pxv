@@ -1,6 +1,6 @@
 :case_name=>"HVAC2e",
 :climate=>"HEATING",
 :hvac_model=>"DETAILED",
-:heating_cap=>56100,
+:heating_capacity=>56100,
 :hvac_type=>"ACPMRESISTANCE",
 :afue=>1.0
