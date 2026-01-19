@@ -23,7 +23,6 @@
   parameter "envelope_eff", :default=>"TYPICAL" # choices: TYPICAL, LOW, HIGH
   parameter "heat_sp", :default=>68 # F
   parameter "cool_sp", :default=>78 # F
-  parameter "heat_sb", :default=>20 # C
   parameter "h_ext", :default=>nil
   parameter "h_int", :default=>nil
   parameter "framing_factor_walls", :default=>0.25 # Note 3 in Table 7.1 specifies 0.25 framing factor for exterior walls
