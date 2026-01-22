@@ -675,7 +675,7 @@ window_area = 0.0
 
   <%
 
-  cli_command = "uv run python get_air_source_heat_pump_performance_map.py #{compressor_speed_type} #{cooling_capacity} #{heating_capacity} #{heating_capacity_17} #{seer2} #{eer2} #{hspf2}"
+  cli_command = "uv run python functions/get_air_source_heat_pump_performance_map.py #{compressor_speed_type} #{cooling_capacity} #{heating_capacity} #{heating_capacity_17} #{seer2} #{eer2} #{hspf2}"
 
   run_command = `#{cli_command}`
 
