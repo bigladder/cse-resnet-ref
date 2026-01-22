@@ -37,11 +37,11 @@
   parameter "heating_type", :default=>"GAS_FURNACE" # heat/cool type, choices: GAS_FURNACE | HEAT_PUMP | ELECTRIC_FURNACE
   parameter "duct_type", :default=>"DUCTED" # choices DUCTED | DUCTLESS
   parameter "heating_capacity", :default=>56100 # heating capacity or heating capacity at 47°F, Btu/hr, default from HVAC2a gas furnace capacity
-  parameter "heating_capacity_17", :default=>35100 # heating capacity at 17°F, Btu/hr, default from HVAC2a gas furnace capacity
+  parameter "heating_capacity_17", :default=>nil # heating capacity at 17°F, Btu/hr, default from HVAC2a gas furnace capacity
   parameter "afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
   parameter "cooling_capacity", :default=>38300 # cooling capacity, Btu/hr, default from HVAC1a DX capacity
   parameter "seer2", :default=>9.50 # DX cooling SEER2
-  parameter "eer2", :default=>8.32 # DX cooling EER2
+  parameter "eer2", :default=>nil # DX cooling EER2
   parameter "hspf2", :default=>5.78 # Heating Seasonal Performance Factor for HEAT_PUMP
   parameter "compressor_speed_type", :default=>"SINGLE_STAGE" # Number of compressor stages, choices: SINGLE_STAGE | TWO_STAGE | VARIABLE_SPEED
   parameter "fan_motor_type", :default=>"PSC" # Fan Motor Type for blower system 
@@ -145,7 +145,7 @@ def calculate_bpm_ductless_fan_flow_rate_per_capacity(rated_specific_fan_power, 
   return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity) ** 2.00
 end
 
-
+# Define operational_fan_flow_rate_per_heating_capacity if nil using defaults per Addendum 82 Section C.6.13 Indoor Fan Energy
 if operational_fan_flow_rate_per_heating_capacity.nil?
   if heating_type == "HEAT_PUMP"
     operational_fan_flow_rate_per_heating_capacity = 360
@@ -153,6 +153,25 @@ if operational_fan_flow_rate_per_heating_capacity.nil?
     operational_fan_flow_rate_per_heating_capacity = 240
   end
 end
+
+# Define heating_capacity_17 if nil
+if heating_capacity_17.nil?
+  if compressor_speed_type == "VARIABLE_SPEED"
+    heating_capacity_17 = 0.689 * heating_capacity
+  else # compressor_speed_type == SINGLE_STAGE | TWO_STAGE
+    heating_capacity_17 = 0.626 * heating_capacity
+  end
+end
+
+# Define eer2 if nil
+if eer2.nil?
+  if seer2 < 13.0 
+    eer2 = 10.0 + 0.84 * (seer2 - 11.5)
+  else # seer2 >= 13.0
+    eer2 = 11.3 + 0.57 * (seer2 - 13.0)
+  end
+end
+
 
 if fan_motor_type == "PSC"
   rated_specific_fan_power = 0.414

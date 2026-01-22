@@ -4,17 +4,6 @@ from koozie import fr_u
 from resdx import RESNETDXModel, StagingType, get_heating_performance_map_object, get_cooling_performance_map_object
 
 
-def _calculate_eer_from_seer(seer: float) -> float:
-    return 10.0 + 0.84 * (seer - 11.5) if seer < 13.0 else 11.3 + 0.57 * (seer - 13.0)
-
-
-def _calculate_heating_capacity_17_rated(capacity_47_rated: float, stage_type: StagingType) -> float:
-    if stage_type == StagingType.VARIABLE_SPEED:
-        return 0.689 * capacity_47_rated
-    else:  # Single or Two Speed
-        return 0.626 * capacity_47_rated
-
-
 def get_performance_map(
     stage_type: str,
     cooling_capacity_95_btuh: str,
