@@ -46,8 +46,8 @@
   parameter "compressor_speed_type", :default=>"SINGLE_STAGE" # Number of compressor stages, choices: SINGLE_STAGE | TWO_STAGE | VARIABLE_SPEED
   parameter "fan_motor_type", :default=>"PSC" # Fan Motor Type for blower system 
   parameter "rated_fan_flow_rate_per_capacity", :default=>400 # cfm per ton of cooling capacity, per Addendum 82 Section C.6.4 Net-to-Gross Performance Conversions
-  parameter "mode_fan_flow_rate_per_cooling_capacity", :default=>360 # cfm per ton of cooling capacity, per Addendum 82 Section C.6.13 Indoor Fan Energy
-  parameter "mode_fan_flow_rate_per_heating_capacity", :default=>nil # cfm per ton of heating capacity, either user defined or defaults per Addendum 82 Section C.6.13 Indoor Fan Energy | default HEAT_PUMP is 360 cfm/ton | default GAS_FURNACE or ELECTRIC_FURNACE is 240 cfm/ton
+  parameter "operational_fan_flow_rate_per_cooling_capacity", :default=>360 # cfm per ton of cooling capacity, per Addendum 82 Section C.6.13 Indoor Fan Energy
+  parameter "operational_fan_flow_rate_per_heating_capacity", :default=>nil # cfm per ton of heating capacity, either user defined or defaults per Addendum 82 Section C.6.13 Indoor Fan Energy | default HEAT_PUMP is 360 cfm/ton | default GAS_FURNACE or ELECTRIC_FURNACE is 240 cfm/ton
   parameter "supply_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as supply duct area
   parameter "return_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as return duct area
   parameter "duct_zone", :default=>"Main Zone" # zone where supply and return ducts are located
@@ -146,34 +146,34 @@ def calculate_bpm_ductless_fan_flow_rate_per_capacity(rated_specific_fan_power, 
 end
 
 
-if mode_fan_flow_rate_per_heating_capacity.nil?
+if operational_fan_flow_rate_per_heating_capacity.nil?
   if heating_type == "HEAT_PUMP"
-    mode_fan_flow_rate_per_heating_capacity = 360
+    operational_fan_flow_rate_per_heating_capacity = 360
   else # GAS_FURNACE or ELECTRIC_FURNACE
-    mode_fan_flow_rate_per_heating_capacity = 240
+    operational_fan_flow_rate_per_heating_capacity = 240
   end
 end
 
 if fan_motor_type == "PSC"
   rated_specific_fan_power = 0.414
-  cooling_mode_specific_fan_power = calculate_psc_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, mode_fan_flow_rate_per_cooling_capacity)
-  heating_mode_specific_fan_power = calculate_psc_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, mode_fan_flow_rate_per_heating_capacity)
+  cooling_mode_specific_fan_power = calculate_psc_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_cooling_capacity)
+  heating_mode_specific_fan_power = calculate_psc_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_heating_capacity)
 
 elsif fan_motor_type == "BPM"
   if duct_type == "DUCTED"
     rated_specific_fan_power = 0.281
-    cooling_mode_specific_fan_power = calculate_bpm_ducted_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, mode_fan_flow_rate_per_cooling_capacity)
-    heating_mode_specific_fan_power = calculate_bpm_ducted_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, mode_fan_flow_rate_per_heating_capacity)
+    cooling_mode_specific_fan_power = calculate_bpm_ducted_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_cooling_capacity)
+    heating_mode_specific_fan_power = calculate_bpm_ducted_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_heating_capacity)
 
   elsif duct_type == "DUCTLESS"
     rated_specific_fan_power = 0.171
-    cooling_mode_specific_fan_power = calculate_bpm_ductless_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, mode_fan_flow_rate_per_cooling_capacity)
-    heating_mode_specific_fan_power = calculate_bpm_ductless_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, mode_fan_flow_rate_per_heating_capacity)
+    cooling_mode_specific_fan_power = calculate_bpm_ductless_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_cooling_capacity)
+    heating_mode_specific_fan_power = calculate_bpm_ductless_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_heating_capacity)
   end
 end
 
 if heating_capacity > 0 or cooling_capacity > 0
-  fan_flow = mode_fan_flow_rate_per_cooling_capacity * [heating_capacity, cooling_capacity].max / 12000 # multiplying cfm/ton by max of heating or cooling Btu/hr to get cfm  if return_duct_area > 0 and supply_duct_area > 0
+  fan_flow = operational_fan_flow_rate_per_cooling_capacity * [heating_capacity, cooling_capacity].max / 12000 # multiplying cfm/ton by max of heating or cooling Btu/hr to get cfm  if return_duct_area > 0 and supply_duct_area > 0
   if return_duct_area > 0 and supply_duct_area > 0
     duct_leakage_fraction = 0.5 * duct_leakage_flow / fan_flow # half of total leakage flow assigned to supply + return ducts
   else
@@ -696,7 +696,7 @@ window_area = 0.0
     rsSEER = <%= seer2 / 0.95 %>
     rsFanPwrH = <%= heating_mode_specific_fan_power %>
     rsFanMotTy = <%= fan_motor_type %>
-    rsTdDesH = <%= 1 / (mode_fan_flow_rate_per_heating_capacity * air_specific_heat * air_density) * 12000.0 / 60.0 %> // Unit conversion of 12000 / 60 converts min*ton to Btu (conversion 1 - 12000 Btu / hr*ton) (conversion 2 - 1 hr / 60 min) 
+    rsTdDesH = <%= 1 / (operational_fan_flow_rate_per_heating_capacity * air_specific_heat * air_density) * 12000.0 / 60.0 %> // Unit conversion of 12000 / 60 converts min*ton to Btu (conversion 1 - 12000 Btu / hr*ton) (conversion 2 - 1 hr / 60 min) 
   <% if heating_type == "GAS_FURNACE" or heating_type == "ELECTRIC_FURNACE"%>
     rsAFUE = <%= afue %>
     rsCapH = <%= heating_capacity %>
@@ -707,7 +707,7 @@ window_area = 0.0
     rsPerfMapHtg = "RSYS Heating Performance Map"
     rsPerfMapClg = "RSYS Cooling Performance Map"
   <% end %>
-    rsVFPerTon = <%= mode_fan_flow_rate_per_cooling_capacity %>
+    rsVFPerTon = <%= operational_fan_flow_rate_per_cooling_capacity %>
 
   <% if supply_duct_area > 0 %>
   // Main Zone Supply Duct
