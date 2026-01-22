@@ -133,16 +133,16 @@ overhang_height = 1.0 # Height of gap between top of window and bottom of overha
 supply_duct_area = supply_duct_area_fraction * floor_area
 return_duct_area = return_duct_area_fraction * floor_area
 
-def calculate_psc_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, measured_fan_flow_rate_per_capacity)
-  return rated_specific_fan_power * (0.3 * rated_fan_flow_rate_per_capacity / measured_fan_flow_rate_per_capacity + 0.7) 
+def calculate_psc_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_capacity)
+  return rated_specific_fan_power * (0.3 * rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity + 0.7) 
 end
 
-def calculate_bpm_ducted_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, measured_fan_flow_rate_per_capacity)
-  return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / measured_fan_flow_rate_per_capacity) ** 1.75
+def calculate_bpm_ducted_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_capacity)
+  return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity) ** 1.75
 end
 
-def calculate_bpm_ductless_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, measured_fan_flow_rate_per_capacity)
-  return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / measured_fan_flow_rate_per_capacity) ** 2.00
+def calculate_bpm_ductless_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_capacity)
+  return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity) ** 2.00
 end
 
 
