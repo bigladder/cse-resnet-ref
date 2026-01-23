@@ -163,8 +163,9 @@ end
 
 
 def calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, flow_ratio)
-  # Equations are defined in Addendum 8.2 Section C.6.13 Indoor Fan Energy
-  # 0.414, 0.281, and 0.171 are rated specific fan power constants defined in Addendum 82 Section C.6.4 Net-to-Gross Performance Conversions
+  # Equations are defined in Addendum 8.2 Section C.6.13 Indoor Fan Energy. 
+  # Equations in aforementioned section are defined as P_fan_op_mode_i = ...; equations below are manipulated to set P_fan_op_mode_i / V_op_mode_i = ...
+  # Values 0.414, 0.281, and 0.171 are rated specific fan power constants defined in Addendum 82 Section C.6.4 Net-to-Gross Performance Conversions
   if fan_motor_type == "PSC"
     return 0.414 * (0.3 * flow_ratio + 0.7) 
   else # fan_motor_type == "BPM"
