@@ -161,36 +161,24 @@ if eer2.nil?
   end
 end
 
-def calculate_rated_specific_fan_power(fan_motor_type, duct_type)
+
+def calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, flow_ratio)
+  # Equations are defined in Addendum 8.2 Section C.6.13 Indoor Fan Energy
+  # 0.414, 0.281, and 0.171 are rated specific fan power constants defined in Addendum 82 Section C.6.4 Net-to-Gross Performance Conversions
   if fan_motor_type == "PSC"
-    return 0.414 
+    return 0.414 * (0.3 * flow_ratio + 0.7) 
   else # fan_motor_type == "BPM"
     if duct_type == "DUCTED"
-      return 0.281
+      return 0.281 * (flow_ratio) ** 1.75
     else # duct_type == "DUCTLESS"
-      return 0.171
+      return 0.171 * (flow_ratio) ** 2.00
     end
   end
 end
 
 
-def calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_capacity)
-  if fan_motor_type == "PSC"
-    return rated_specific_fan_power * (0.3 * rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity + 0.7) 
-  else # fan_motor_type == "BPM"
-    if duct_type == "DUCTED"
-      return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity) ** 1.75
-    else # duct_type == "DUCTLESS"
-      return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity) ** 2.00
-    end
-  end
-end
-
-
-
-rated_specific_fan_power = calculate_rated_specific_fan_power(fan_motor_type, duct_type)
-cooling_mode_specific_fan_power = calculate_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_cooling_capacity)
-heating_mode_specific_fan_power = calculate_fan_flow_rate_per_capacity(rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_heating_capacity)
+cooling_mode_specific_fan_power = calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_cooling_capacity)
+heating_mode_specific_fan_power = calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_heating_capacity)
 
 
 if heating_capacity > 0 or cooling_capacity > 0
