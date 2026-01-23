@@ -43,6 +43,8 @@
   parameter "seer2", :default=>9.50 # DX cooling SEER2
   parameter "eer2", :default=>nil # DX cooling EER2
   parameter "hspf2", :default=>5.78 # Heating Seasonal Performance Factor for HEAT_PUMP
+  parameter "cooling_cycling_degradation", :default=> 0.25 # AC unit cycling degradation constant | 0 <= x <= 0.5
+  parameter "heating_cycling_degradation", :default=> 0.25 # HEAT_PUMP cycling degradation constant | 0 <= x <= 0.5
   parameter "compressor_speed_type", :default=>"SINGLE_STAGE" # Number of compressor stages, choices: SINGLE_STAGE | TWO_STAGE | VARIABLE_SPEED
   parameter "fan_motor_type", :default=>"PSC" # Fan Motor Type for blower system 
   parameter "rated_fan_flow_rate_per_capacity", :default=>400 # cfm per ton of cooling capacity, per Addendum 82 Section C.6.4 Net-to-Gross Performance Conversions
@@ -707,11 +709,13 @@ window_area = 0.0
     rsFanPwrH = <%= heating_mode_specific_fan_power %>
     rsFanMotTy = <%= fan_motor_type %>
     rsTdDesH = <%= 1 / (operational_fan_flow_rate_per_heating_capacity * air_specific_heat * air_density) * 12000.0 / 60.0 %> // Unit conversion of 12000 / 60 converts min*ton to Btu (conversion 1 - 12000 Btu / hr*ton) (conversion 2 - 1 hr / 60 min) 
+    rsCdC = <%= cooling_cycling_degradation %>
   <% if heating_type == "GAS_FURNACE" or heating_type == "ELECTRIC_FURNACE"%>
     rsAFUE = <%= afue %>
     rsCapH = <%= heating_capacity %>
     rsPerfMapClg = "RSYS Cooling Performance Map"
   <% elsif heating_type == "HEAT_PUMP" %>
+    rsCdH = <%= heating_cycling_degradation %>
     rsCap47 = <%= heating_capacity %>
     rsHSPF = <%= hspf2 / 0.85 %>
     rsPerfMapHtg = "RSYS Heating Performance Map"
