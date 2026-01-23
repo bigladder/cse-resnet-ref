@@ -134,32 +134,6 @@ supply_duct_area = supply_duct_area_fraction * floor_area
 return_duct_area = return_duct_area_fraction * floor_area
 
 
-def calculate_rated_specific_fan_power(fan_motor_type, duct_type)
-  if fan_motor_type == "PSC"
-    return 0.414 
-  else # fan_motor_type == "BPM"
-    if duct_type == "DUCTED"
-      return 0.281
-    else # duct_type == "DUCTLESS"
-      return 0.171
-    end
-  end
-end
-
-
-def calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_capacity)
-  if fan_motor_type == "PSC"
-    return rated_specific_fan_power * (0.3 * rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity + 0.7) 
-  else # fan_motor_type == "BPM"
-    if duct_type == "DUCTED"
-      return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity) ** 1.75
-    else # duct_type == "DUCTLESS"
-      return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity) ** 2.00
-    end
-  end
-end
-
-
 # Define operational_fan_flow_rate_per_heating_capacity if nil using defaults per Addendum 82 Section C.6.13 Indoor Fan Energy
 if operational_fan_flow_rate_per_heating_capacity.nil?
   if heating_type == "HEAT_PUMP"
@@ -186,6 +160,32 @@ if eer2.nil?
     eer2 = 11.3 + 0.57 * (seer2 - 13.0)
   end
 end
+
+def calculate_rated_specific_fan_power(fan_motor_type, duct_type)
+  if fan_motor_type == "PSC"
+    return 0.414 
+  else # fan_motor_type == "BPM"
+    if duct_type == "DUCTED"
+      return 0.281
+    else # duct_type == "DUCTLESS"
+      return 0.171
+    end
+  end
+end
+
+
+def calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, rated_specific_fan_power, rated_fan_flow_rate_per_capacity, operational_fan_flow_rate_per_capacity)
+  if fan_motor_type == "PSC"
+    return rated_specific_fan_power * (0.3 * rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity + 0.7) 
+  else # fan_motor_type == "BPM"
+    if duct_type == "DUCTED"
+      return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity) ** 1.75
+    else # duct_type == "DUCTLESS"
+      return rated_specific_fan_power * (rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_capacity) ** 2.00
+    end
+  end
+end
+
 
 
 rated_specific_fan_power = calculate_rated_specific_fan_power(fan_motor_type, duct_type)
