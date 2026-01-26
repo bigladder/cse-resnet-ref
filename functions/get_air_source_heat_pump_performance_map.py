@@ -31,7 +31,7 @@ def get_performance_map(
     heating_capacity_47 = fr_u(float(heating_capacity_47_btuh), "kBtu/h")
     heating_capacity_17 = fr_u(float(heating_capacity_17_btuh), "kBtu/h")
 
-    minimum_rated_temperature = float(minimum_rated_temperature_degF)
+    minimum_rated_temperature = fr_u(float(minimum_rated_temperature_degF), "degF")
 
     seer2: float = float(seer2)  # type: ignore
     eer2: float = float(eer2)  # type: ignore
