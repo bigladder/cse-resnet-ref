@@ -43,8 +43,6 @@
   parameter "seer2", :default=>9.50 # DX cooling SEER2
   parameter "eer2", :default=>nil # DX cooling EER2
   parameter "hspf2", :default=>5.78 # Heating Seasonal Performance Factor for HEAT_PUMP
-  parameter "cooling_cycling_degradation", :default=> 0.25 # AC unit cycling degradation constant | 0 <= x <= 0.5
-  parameter "heating_cycling_degradation", :default=> 0.25 # HEAT_PUMP cycling degradation constant | 0 <= x <= 0.5
   parameter "compressor_speed_type", :default=>"SINGLE_STAGE" # Number of compressor stages, choices: SINGLE_STAGE | TWO_STAGE | VARIABLE_SPEED
   parameter "fan_motor_type", :default=>"PSC" # Fan Motor Type for blower system 
   parameter "operational_fan_flow_rate_per_cooling_capacity", :default=>360 # cfm per ton of cooling capacity, per Addendum 82 Section C.6.13 Indoor Fan Energy
@@ -184,6 +182,16 @@ end
 
 cooling_mode_specific_fan_power = calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_cooling_capacity)
 heating_mode_specific_fan_power = calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_heating_capacity)
+
+
+# cycling degradation coefficients are listed in Addendum 82 Section C.6.12 Operating Performance
+if compressor_speed_type = "VARIABLE_SPEED"
+  cooling_cycling_degradation = 0.40
+  heating_cycling_degradation = 0.40
+else # compressor_speed_type = SINGLE_STAGE | TWO_STAGE
+  cooling_cycling_degradation = 0.08
+  heating_cycling_degradation = 0.08
+end
 
 
 if heating_capacity > 0 or cooling_capacity > 0
