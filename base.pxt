@@ -47,7 +47,6 @@
   parameter "heating_cycling_degradation", :default=> 0.25 # HEAT_PUMP cycling degradation constant | 0 <= x <= 0.5
   parameter "compressor_speed_type", :default=>"SINGLE_STAGE" # Number of compressor stages, choices: SINGLE_STAGE | TWO_STAGE | VARIABLE_SPEED
   parameter "fan_motor_type", :default=>"PSC" # Fan Motor Type for blower system 
-  parameter "rated_fan_flow_rate_per_capacity", :default=>400 # cfm per ton of cooling capacity, per Addendum 82 Section C.6.4 Net-to-Gross Performance Conversions
   parameter "operational_fan_flow_rate_per_cooling_capacity", :default=>360 # cfm per ton of cooling capacity, per Addendum 82 Section C.6.13 Indoor Fan Energy
   parameter "operational_fan_flow_rate_per_heating_capacity", :default=>nil # cfm per ton of heating capacity, either user defined or defaults per Addendum 82 Section C.6.13 Indoor Fan Energy | default HEAT_PUMP is 360 cfm/ton | default GAS_FURNACE or ELECTRIC_FURNACE is 240 cfm/ton
   parameter "supply_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as supply duct area
@@ -132,6 +131,8 @@ door_height = (6.00 + (8.00 / 12.00) ) # Door height [ft]
 
 overhang_depth = 2.5 # Depth of overhang [ft]
 overhang_height = 1.0 # Height of gap between top of window and bottom of overhang [ft]
+
+rated_fan_flow_rate_per_capacity = 400 # cfm per ton of cooling or heating capacity, per Addendum 82 Section C.6.4 Net-to-Gross Performance Conversions
 
 supply_duct_area = supply_duct_area_fraction * floor_area
 return_duct_area = return_duct_area_fraction * floor_area
