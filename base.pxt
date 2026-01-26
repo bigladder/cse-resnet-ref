@@ -80,6 +80,7 @@ k_r = 9/5.0
 q_c = w_btu/m2_ft2
 u_c = q_c/k_r
 kilo_base = 1000.0
+mega_base = 1000000.0 
 
 def c_f(c)
   return c*9/5.0 + 32.0
@@ -970,29 +971,29 @@ EXPORT
   // Heating
 <% if hvac_model  == "DETAILED" %>
   <% if ["HVAC2a", "HVAC2b", "HVAC3a", "HVAC3b", "HVAC3c", "HVAC3d"].include?(case_name) %>
-  EXPORTCOL colHead="Annual Heating Equipment [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
-  EXPORTCOL colHead="Annual Heating Fan [MBtu]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
-  EXPORTCOL colHead="Annual Heating Total [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
+  EXPORTCOL colHead="Annual Heating Equipment [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/mega_base
+  EXPORTCOL colHead="Annual Heating Fan [MBtu]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/mega_base
+  EXPORTCOL colHead="Annual Heating Total [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/mega_base
   <% else %>
-  EXPORTCOL colHead="Annual Heating Equipment [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/1000000
-  EXPORTCOL colHead="Annual Heating Fan [MBtu]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
-  EXPORTCOL colHead="Annual Heating Total [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/1000000
+  EXPORTCOL colHead="Annual Heating Equipment [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg)/mega_base
+  EXPORTCOL colHead="Annual Heating Fan [MBtu]" colVal=(@meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/mega_base
+  EXPORTCOL colHead="Annual Heating Total [MBtu]" colVal=(@meter["Elec Meter"].Y.htg + @meter["Gas Meter"].Y.htg + @meter["Elec Meter"].Y.fanH + @meter["Gas Meter"].Y.fanH)/mega_base
   <% end %>
 <% else %>
   <% if foundation_type == "BASEMENT" and basement_conditioned %>
-  EXPORTCOL colHead="Annual Heating [MBtu]" colVal=(@znRes["Main Zone"].Y.qhMech + @znRes["Basement Zone"].Y.qhMech)/1000000
+  EXPORTCOL colHead="Annual Heating [MBtu]" colVal=(@znRes["Main Zone"].Y.qhMech + @znRes["Basement Zone"].Y.qhMech)/mega_base
   <% else %>
-  EXPORTCOL colHead="Annual Heating [MBtu]" colVal=@znRes["Main Zone"].Y.qhMech/1000000
+  EXPORTCOL colHead="Annual Heating [MBtu]" colVal=@znRes["Main Zone"].Y.qhMech/mega_base
   <% end %>
 <% end %>
 
   // Cooling
 <% if hvac_model  == "DETAILED" %>
-  EXPORTCOL colHead="Annual Cooling Equipment [MBtu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg)/1000000
-  EXPORTCOL colHead="Annual Cooling Fan [MBtu]" colVal=(@meter["Elec Meter"].Y.fanC + @meter["Gas Meter"].Y.fanC)/1000000
-  EXPORTCOL colHead="Annual Cooling Total [MBtu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg + @meter["Elec Meter"].Y.fanC + @meter["Gas Meter"].Y.fanC)/1000000
+  EXPORTCOL colHead="Annual Cooling Equipment [MBtu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg)/mega_base
+  EXPORTCOL colHead="Annual Cooling Fan [MBtu]" colVal=(@meter["Elec Meter"].Y.fanC + @meter["Gas Meter"].Y.fanC)/mega_base
+  EXPORTCOL colHead="Annual Cooling Total [MBtu]" colVal=(@meter["Elec Meter"].Y.clg + @meter["Gas Meter"].Y.clg + @meter["Elec Meter"].Y.fanC + @meter["Gas Meter"].Y.fanC)/mega_base
 <% else %>
-  EXPORTCOL colHead="Annual Cooling [MBtu]" colVal=@znRes["Main Zone"].Y.qcMech/-1000000
+  EXPORTCOL colHead="Annual Cooling [MBtu]" colVal=@znRes["Main Zone"].Y.qcMech/-mega_base
 <% end %>
 
 EXPORTFILE "Seasonal Temperatures"
