@@ -185,7 +185,7 @@ heating_mode_specific_fan_power = calculate_fan_flow_rate_per_capacity(fan_motor
 
 
 # cycling degradation coefficients are listed in Addendum 82 Section C.6.12 Operating Performance
-if compressor_speed_type = "VARIABLE_SPEED"
+if compressor_speed_type == "VARIABLE_SPEED"
   cooling_cycling_degradation = 0.40
   heating_cycling_degradation = 0.40
 else # compressor_speed_type = SINGLE_STAGE | TWO_STAGE
