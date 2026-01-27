@@ -187,11 +187,9 @@ heating_mode_specific_fan_power = calculate_fan_flow_rate_per_capacity(fan_motor
 
 # cycling degradation coefficients are listed in Addendum 82 Section C.6.12 Operating Performance
 if compressor_speed_type == "VARIABLE_SPEED"
-  cooling_cycling_degradation = 0.40
-  heating_cycling_degradation = 0.40
+  cycling_degradation = 0.40
 else # compressor_speed_type = SINGLE_STAGE | TWO_STAGE
-  cooling_cycling_degradation = 0.08
-  heating_cycling_degradation = 0.08
+  cycling_degradation = 0.08
 end
 
 
@@ -720,13 +718,13 @@ window_area = 0.0
     rsFanPwrH = <%= heating_mode_specific_fan_power %>
     rsFanMotTy = <%= fan_motor_type %>
     rsTdDesH = <%= 1 / (operational_fan_flow_rate_per_heating_capacity * air_specific_heat * air_density) * 12000.0 / 60.0 %> // Unit conversion of 12000 / 60 converts min*ton to Btu (conversion 1 - 12000 Btu / hr*ton) (conversion 2 - 1 hr / 60 min) 
-    rsCdC = <%= cooling_cycling_degradation %>
+    rsCdC = <%= cycling_degradation %>
   <% if heating_type == "GAS_FURNACE" or heating_type == "ELECTRIC_FURNACE"%>
     rsAFUE = <%= afue %>
     rsCapH = <%= heating_capacity %>
     rsPerfMapClg = "RSYS Cooling Performance Map"
   <% elsif heating_type == "HEAT_PUMP" %>
-    rsCdH = <%= heating_cycling_degradation %>
+    rsCdH = <%= cycling_degradation %>
     rsCap47 = <%= heating_capacity %>
     rsHSPF = <%= hspf2 / 0.85 %>
     rsPerfMapHtg = "RSYS Heating Performance Map"
