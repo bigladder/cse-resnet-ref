@@ -71,7 +71,7 @@ btu_j = h_s/w_btu
 k_r = 9/5.0
 q_c = w_btu/m2_ft2
 u_c = q_c/k_r
-mega_base = 1000000.0 
+mega_base = 1000000.0
 
 def c_f(c)
   return c*9/5.0 + 32.0
