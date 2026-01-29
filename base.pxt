@@ -193,13 +193,20 @@ else # compressor_speed_type = SINGLE_STAGE | TWO_STAGE
 end
 
 
-if heating_capacity > 0 or cooling_capacity > 0
-  fan_flow = operational_fan_flow_rate_per_cooling_capacity * [heating_capacity, cooling_capacity].max / 12000 # multiplying cfm/ton by max of heating or cooling Btu/hr to get cfm  if return_duct_area > 0 and supply_duct_area > 0
-  if return_duct_area > 0 and supply_duct_area > 0
-    duct_leakage_fraction = 0.5 * duct_leakage_flow / fan_flow # half of total leakage flow assigned to supply + return ducts
-  else
-    duct_leakage_fraction = duct_leakage_flow / fan_flow # total leakage flow assigned to supply or return duct
-  end
+def get_fan_flow(capacity, fan_flow_rate_per_capacity)
+  return fan_flow_rate_per_capacity * capacity / 12000 # multiplying cfm/ton by heating or cooling capacity Btu/hr to get cfm
+end
+
+if climate == "HEATING" and heating_capacity > 0
+  fan_flow = get_fan_flow(heating_capacity, operational_fan_flow_rate_per_heating_capacity)
+elsif climate == "COOLING" and cooling_capacity > 0
+  fan_flow = get_fan_flow(cooling_capacity, operational_fan_flow_rate_per_cooling_capacity)
+end
+
+if return_duct_area > 0 and supply_duct_area > 0
+  duct_leakage_fraction = 0.5 * duct_leakage_flow / fan_flow # half of total leakage flow assigned to supply + return ducts
+else
+  duct_leakage_fraction = duct_leakage_flow / fan_flow # total leakage flow assigned to supply or return duct
 end
 
 if heating_type == "GAS_FURNACE"
