@@ -27,9 +27,9 @@ def get_performance_map(
     """
     stage_type = StagingType[stage_type]
 
-    cooling_capacity_95 = fr_u(float(cooling_capacity_95_btuh), "kBtu/h")
-    heating_capacity_47 = fr_u(float(heating_capacity_47_btuh), "kBtu/h")
-    heating_capacity_17 = fr_u(float(heating_capacity_17_btuh), "kBtu/h")
+    cooling_capacity_95 = fr_u(float(cooling_capacity_95_btuh), "Btu/h")
+    heating_capacity_47 = fr_u(float(heating_capacity_47_btuh), "Btu/h")
+    heating_capacity_17 = fr_u(float(heating_capacity_17_btuh), "Btu/h")
 
     minimum_rated_temperature = fr_u(float(minimum_rated_temperature_degF), "degF")
 
