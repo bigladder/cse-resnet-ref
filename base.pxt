@@ -52,7 +52,9 @@
   parameter "return_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as return duct area
   parameter "duct_zone", :default=>"Main Zone" # zone where supply and return ducts are located
   parameter "duct_insulation_r_value", :default=>0 # R-value of duct insulation without air film
-  parameter "duct_air_film_r_value", :default=>1.5 # R-value of exterior air film for duct (or duct insulation)
+  parameter "duct_air_film_r_value", :default=>0.667 # R-value of exterior air film for duct (or duct insulation) Defined in RESNET 301-2025 Section 4.2.2.5.1
+  parameter "duct_diameter_supply", :default=>6 # (in.) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
+  parameter "duct_diameter_return", :default=>14 # (in.) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
   parameter "duct_leakage_flow", :default=>0 # combined cfm airflow leaking out of supply + return ducts
   parameter "duct_exterior_emittance", :default=>0 # Exposed (i.e. insulation) outside surface exterior long wave (thermal) emittance
 
@@ -90,6 +92,11 @@ nsteps = 6
 # Air Constants
 air_specific_heat = 0.24 # Btu/(lb*degF)
 air_density = 0.077 # lb/ft3
+
+# Duct Constants
+$r_air_film_external = 0.667
+$r_air_film_internal_cse_default = 0.4 # CSE uses a default of 0.4 for the internal air film
+$duct_insulation_resistivity = 2.8 # (ft2∙°F∙h/Btu) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
 
 # weather file
 if climate == "HEATING"
@@ -154,6 +161,32 @@ if heating_capacity_17.nil?
     heating_capacity_17 = 0.626 * heating_capacity
   end
 end
+
+def calculate_effective_round_duct_insulation(diameter, r_nominal_insulation)
+  # Applies round duct insulation calculations according to RESNET/ICC 301-2025 Section 4.2.2.5.1
+  # Calculates the effective R-value of round ducts, including air films
+  # R_overall = R_air_film_internal + R_effective + R_air_film_external; where R_effective has no air films
+  # CSE uses a default of 0.4 for internal air film R-value ($r_air_film_internal_cse_default), which must be removed to calculate the effective duct insulation
+
+  thickness_insulation = r_nominal_insulation / $duct_insulation_resistivity # (in.) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
+
+  r_air_film_internal = 0.3429 * diameter ** 0.1974 # (ft2∙°F∙h/Btu) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
+  if thickness_insulation > 0
+    r_effective = r_nominal_insulation / thickness_insulation * (diameter / 2) * Math.log(1 + ((2 * thickness_insulation) / diameter))
+  else
+    r_effective = 0
+  end
+
+  if r_air_film_internal + r_effective >= $r_air_film_internal_cse_default
+    return r_air_film_internal + r_effective - $r_air_film_internal_cse_default
+  else
+    return 0
+  end
+
+end
+
+r_effective_insulation_duct_supply = calculate_effective_round_duct_insulation(duct_diameter_supply, duct_insulation_r_value)
+r_effective_insulation_duct_return = calculate_effective_round_duct_insulation(duct_diameter_return, duct_insulation_r_value)
 
 # Define eer2 if nil
 if eer2.nil?
@@ -746,8 +779,8 @@ window_area = 0.0
       dsExArea = <%= supply_duct_area %>
       dsExCnd = ADJZN
       dsAdjZn = "<%= duct_zone %>"
-      dsInsulR = <%= duct_insulation_r_value %>
-      dsExH = <%= 1 / duct_air_film_r_value %>
+      dsInsulR = <%= r_effective_insulation_duct_supply %>
+      dsExH = <%= 1/$r_air_film_external %>
       dsLeakF = <%= duct_leakage_fraction %>
       dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
@@ -759,8 +792,8 @@ window_area = 0.0
       dsExArea = <%= return_duct_area %>
       dsExCnd = ADJZN
       dsAdjZn = "<%= duct_zone %>"
-      dsInsulR = <%= duct_insulation_r_value %>
-      dsExH = <%= 1 / duct_air_film_r_value %>
+      dsInsulR = <%= r_effective_insulation_duct_return %>
+      dsExH = <%= 1/$r_air_film_external %>
       dsLeakF = <%= duct_leakage_fraction %>
       dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
