@@ -57,6 +57,8 @@
   parameter "duct_diameter_return", :default=>14 # (in.) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
   parameter "duct_leakage_flow", :default=>0 # combined cfm airflow leaking out of supply + return ducts
   parameter "duct_exterior_emittance", :default=>0 # Exposed (i.e. insulation) outside surface exterior long wave (thermal) emittance
+  parameter "duct_fraction_rectangular_supply", :default=>0.25  # Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
+  parameter "duct_fraction_rectangular_return", :default=>1.00  # Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
 
 # Testing
   parameter "isolate_attic", :default=>false
@@ -95,8 +97,10 @@ air_density = 0.077 # lb/ft3
 
 # Duct Constants
 $r_air_film_external = 0.667
+$r_air_film_internal_rectangular = 0.333
 $r_air_film_internal_cse_default = 0.4 # CSE uses a default of 0.4 for the internal air film
 $duct_insulation_resistivity = 2.8 # (ft2∙°F∙h/Btu) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
+$near_infinite_heat_transfer_coefficient = 1000000000000
 
 # weather file
 if climate == "HEATING"
@@ -162,11 +166,11 @@ if heating_capacity_17.nil?
   end
 end
 
-def calculate_effective_round_duct_insulation(diameter, r_nominal_insulation)
+def calculate_insulation_round_duct(diameter, r_nominal_insulation)
   # Applies round duct insulation calculations according to RESNET/ICC 301-2025 Section 4.2.2.5.1
+    # Rround = Rint_round + Ractual + Rext * (D / (D+2T))
   # Calculates the effective R-value of round ducts, including air films
   # R_overall = R_air_film_internal + R_effective + R_air_film_external; where R_effective has no air films
-  # CSE uses a default of 0.4 for internal air film R-value ($r_air_film_internal_cse_default), which must be removed to calculate the effective duct insulation
 
   thickness_insulation = r_nominal_insulation / $duct_insulation_resistivity # (in.) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
 
@@ -177,16 +181,41 @@ def calculate_effective_round_duct_insulation(diameter, r_nominal_insulation)
     r_effective = 0
   end
 
-  if r_air_film_internal + r_effective >= $r_air_film_internal_cse_default
-    return r_air_film_internal + r_effective - $r_air_film_internal_cse_default
-  else
+  return r_air_film_internal + r_effective + $r_air_film_external * (diameter / (diameter + 2*thickness_insulation))
+
+end
+
+def calculate_insulation_rectangular_duct(r_nominal_insulation)
+  # Applies round duct insulation calculations according to RESNET/ICC 301-2025 Section 4.2.2.5.1
+    # Rrect = Rint_rect + Rnominal + Rext
+
+  return $r_air_film_internal_rectangular + r_nominal_insulation + $r_air_film_external
+end
+
+def calculate_division(numerator, denominator)
+  if denominator == 0
     return 0
+  else
+    return numerator / denominator
   end
 
 end
 
-r_effective_insulation_duct_supply = calculate_effective_round_duct_insulation(duct_diameter_supply, duct_insulation_r_value)
-r_effective_insulation_duct_return = calculate_effective_round_duct_insulation(duct_diameter_return, duct_insulation_r_value)
+def calculate_effective_insulation_duct(r_value_rectangular_duct, r_value_round_duct, duct_fraction_rectangular)
+  # Reffective = 1 / (Frect / Rrect + Fround / Rround)
+  # CSE uses a default of 0.4 for internal air film R-value ($r_air_film_internal_cse_default), which must be removed to calculate the effective duct insulation
+  return calculate_division(1, (calculate_division(duct_fraction_rectangular, r_value_rectangular_duct) + calculate_division(1 - duct_fraction_rectangular, r_value_round_duct))) - $r_air_film_internal_cse_default
+end
+
+r_value_rectangular_duct_supply = calculate_insulation_rectangular_duct(duct_insulation_r_value)
+r_value_rectangular_duct_return = calculate_insulation_rectangular_duct(duct_insulation_r_value)
+
+r_value_round_duct_supply = calculate_insulation_round_duct(duct_diameter_supply, duct_insulation_r_value)
+r_value_round_duct_return = calculate_insulation_round_duct(duct_diameter_return, duct_insulation_r_value)
+
+r_value_duct_supply = calculate_effective_insulation_duct(r_value_rectangular_duct_supply, r_value_round_duct_supply, duct_fraction_rectangular_supply)
+r_value_duct_return = calculate_effective_insulation_duct(r_value_rectangular_duct_return, r_value_round_duct_return, duct_fraction_rectangular_return)
+
 
 # Define eer2 if nil
 if eer2.nil?
@@ -779,8 +808,8 @@ window_area = 0.0
       dsExArea = <%= supply_duct_area %>
       dsExCnd = ADJZN
       dsAdjZn = "<%= duct_zone %>"
-      dsInsulR = <%= r_effective_insulation_duct_supply %>
-      dsExH = <%= 1/$r_air_film_external %>
+      dsInsulR = <%= r_value_duct_supply %>
+      dsExH = <%= $near_infinite_heat_transfer_coefficient %>
       dsLeakF = <%= duct_leakage_fraction %>
       dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
@@ -792,8 +821,8 @@ window_area = 0.0
       dsExArea = <%= return_duct_area %>
       dsExCnd = ADJZN
       dsAdjZn = "<%= duct_zone %>"
-      dsInsulR = <%= r_effective_insulation_duct_return %>
-      dsExH = <%= 1/$r_air_film_external %>
+      dsInsulR = <%= r_value_duct_return %>
+      dsExH = <%= $near_infinite_heat_transfer_coefficient %>
       dsLeakF = <%= duct_leakage_fraction %>
       dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
