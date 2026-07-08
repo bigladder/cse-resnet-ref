@@ -204,7 +204,14 @@ end
 def calculate_effective_insulation_duct(r_value_rectangular_duct, r_value_round_duct, duct_fraction_rectangular)
   # Reffective = 1 / (Frect / Rrect + Fround / Rround)
   # CSE uses a default of 0.4 for internal air film R-value ($r_air_film_internal_cse_default), which must be removed to calculate the effective duct insulation
-  return calculate_division(1, (calculate_division(duct_fraction_rectangular, r_value_rectangular_duct) + calculate_division(1 - duct_fraction_rectangular, r_value_round_duct))) - $r_air_film_internal_cse_default
+  r_effective = calculate_division(1, (calculate_division(duct_fraction_rectangular, r_value_rectangular_duct) + calculate_division(1 - duct_fraction_rectangular, r_value_round_duct))) - $r_air_film_internal_cse_default - $r_air_film_external
+
+  if r_effective > 0
+    return r_effective
+  else
+    return 0
+  end
+
 end
 
 r_value_rectangular_duct_supply = calculate_insulation_rectangular_duct(duct_insulation_r_value)
@@ -809,7 +816,7 @@ window_area = 0.0
       dsExCnd = ADJZN
       dsAdjZn = "<%= duct_zone %>"
       dsInsulR = <%= r_value_duct_supply %>
-      dsExH = <%= $near_infinite_heat_transfer_coefficient %>
+      dsExH = <%= 1 / $r_air_film_external %>
       dsLeakF = <%= duct_leakage_fraction %>
       dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
@@ -822,7 +829,7 @@ window_area = 0.0
       dsExCnd = ADJZN
       dsAdjZn = "<%= duct_zone %>"
       dsInsulR = <%= r_value_duct_return %>
-      dsExH = <%= $near_infinite_heat_transfer_coefficient %>
+      dsExH = <%= 1 / $r_air_film_external %>
       dsLeakF = <%= duct_leakage_fraction %>
       dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
