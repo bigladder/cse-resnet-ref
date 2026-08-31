@@ -224,7 +224,7 @@ def calculate_insulation_rectangular_duct(r_nominal_insulation)
   return $r_air_film_internal_rectangular + r_nominal_insulation + $r_air_film_external
 end
 
-def calculate_division(numerator, denominator)
+def safe_divide(numerator, denominator)
   if denominator == 0
     return 0
   else
@@ -236,7 +236,7 @@ end
 def calculate_effective_insulation_duct(r_value_rectangular_duct, r_value_round_duct, duct_fraction_rectangular)
   # Reffective = 1 / (Frect / Rrect + Fround / Rround)
   # CSE uses a default of 0.4 for internal air film R-value ($r_air_film_internal_cse_default), which must be removed to calculate the effective duct insulation
-  r_effective = calculate_division(1, (calculate_division(duct_fraction_rectangular, r_value_rectangular_duct) + calculate_division(1 - duct_fraction_rectangular, r_value_round_duct))) - $r_air_film_internal_cse_default - $r_air_film_external
+  r_effective = safe_divide(1, (safe_divide(duct_fraction_rectangular, r_value_rectangular_duct) + safe_divide(1 - duct_fraction_rectangular, r_value_round_duct))) - $r_air_film_internal_cse_default - $r_air_film_external
 
   if r_effective > 0
     return r_effective
