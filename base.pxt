@@ -81,8 +81,7 @@ btu_j = h_s/w_btu
 k_r = 9/5.0
 q_c = w_btu/m2_ft2
 u_c = q_c/k_r
-kilo_base = 1000.0
-mega_base = 1000000.0 
+mega_base = 1000000.0
 
 def c_f(c)
   return c*9/5.0 + 32.0
@@ -100,7 +99,6 @@ $r_air_film_external = 0.667
 $r_air_film_internal_rectangular = 0.333
 $r_air_film_internal_cse_default = 0.4 # CSE uses a default of 0.4 for the internal air film
 $duct_insulation_resistivity = 2.8 # (ft2∙°F∙h/Btu) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
-$near_infinite_heat_transfer_coefficient = 1000000000000
 
 # weather file
 if climate == "HEATING"
