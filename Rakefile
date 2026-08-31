@@ -1,5 +1,27 @@
+# Require Modelkit as a library rather than shelling out to the `modelkit` CLI.
+# The CLI's `template-compose` command reads a template path from stdin whenever
+# stdin isn't a TTY (e.g. any non-interactive invocation: CI, scripts, `system()`
+# subprocesses), which silently discards the template argument and fails with
+# "No template was referenced!" -- even though the command line was correct.
+# Calling the library directly skips the CLI parser entirely, so it isn't exposed
+# to that bug. Run via `modelkit rake` so GEM_HOME/GEM_PATH resolve this require.
+if (not defined?(Modelkit))
+  begin
+    require("modelkit")
+  rescue LoadError => exception
+    puts exception
+    puts "ERROR: This rakefile requires the Modelkit library. Try running with:\n  modelkit rake #{ARGV.join(' ')}"
+    exit
+  end
+end
+
+require("modelkit/config")
+require("modelkit/parametrics")
+
 require 'fileutils'
 require 'pathname'
+
+CONFIG = Modelkit::Config.new(".modelkit-config")
 
 def compose(c)
   file_base = File.basename(c,".*")
@@ -22,7 +44,19 @@ def compose(c)
   success = nil
   if !(FileUtils.uptodate?(target, src))
     puts "\ncomposing...\n\n"
-    success = system(%Q|modelkit template-compose -f "#{c}" -o "#{output_dir}/in.cse"  base.pxt|)
+    begin
+      Modelkit::Parametrics.template_compose("base.pxt",
+        :annotate => CONFIG["template-compose.annotate"],
+        :indent => CONFIG["template-compose.indent"],
+        :esc_line => CONFIG["template-compose.esc-line"],
+        :files => [c],
+        :output => target)
+      success = true
+    rescue Exception => exception
+      puts "#{exception.class.name}: #{exception.message}\n"
+      puts "#{exception.backtrace.first}\n" if (not SyntaxError === exception)
+      success = false
+    end
   else
     puts "  ...input already up-to-date."
     success = true
