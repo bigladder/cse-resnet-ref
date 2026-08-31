@@ -218,7 +218,7 @@ def calculate_insulation_round_duct(diameter, r_nominal_insulation)
 end
 
 def calculate_insulation_rectangular_duct(r_nominal_insulation)
-  # Applies round duct insulation calculations according to RESNET/ICC 301-2025 Section 4.2.2.5.1
+  # Applies rectangular duct insulation calculations according to RESNET/ICC 301-2025 Section 4.2.2.5.1
     # Rrect = Rint_rect + Rnominal + Rext
 
   return $r_air_film_internal_rectangular + r_nominal_insulation + $r_air_film_external
