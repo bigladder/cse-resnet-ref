@@ -246,14 +246,14 @@ def calculate_effective_insulation_duct(r_value_rectangular_duct, r_value_round_
 
 end
 
-r_value_rectangular_duct_supply = calculate_insulation_rectangular_duct(duct_insulation_r_value)
-r_value_rectangular_duct_return = calculate_insulation_rectangular_duct(duct_insulation_r_value)
+# The rectangular formula has no diameter term, so it doesn't vary by supply/return like the round one does.
+r_value_rectangular_duct = calculate_insulation_rectangular_duct(duct_insulation_r_value)
 
 r_value_round_duct_supply = calculate_insulation_round_duct(duct_diameter_supply, duct_insulation_r_value)
 r_value_round_duct_return = calculate_insulation_round_duct(duct_diameter_return, duct_insulation_r_value)
 
-r_value_duct_supply = calculate_effective_insulation_duct(r_value_rectangular_duct_supply, r_value_round_duct_supply, duct_fraction_rectangular_supply)
-r_value_duct_return = calculate_effective_insulation_duct(r_value_rectangular_duct_return, r_value_round_duct_return, duct_fraction_rectangular_return)
+r_value_duct_supply = calculate_effective_insulation_duct(r_value_rectangular_duct, r_value_round_duct_supply, duct_fraction_rectangular_supply)
+r_value_duct_return = calculate_effective_insulation_duct(r_value_rectangular_duct, r_value_round_duct_return, duct_fraction_rectangular_return)
 
 
 # Define eer2 if nil
