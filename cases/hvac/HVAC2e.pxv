@@ -1,6 +1,6 @@
 :case_name=>"HVAC2e",
 :climate=>"HEATING",
 :hvac_model=>"DETAILED",
-:heating_cap=>56100,
-:hvac_type=>"ACRESISTANCE",
+:heating_capacity=>56100,
+:heating_type=>"ELECTRIC_FURNACE",
 :afue=>1.0

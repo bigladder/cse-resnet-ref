@@ -4,7 +4,7 @@
 :basement_conditioned=>false,
 :framing_factor_floor=>0.13,
 :hvac_model=>"DETAILED",
-:heating_cap=>56000,
+:heating_capacity=>56000,
 :supply_duct_area_fraction=>0.2,
 :return_duct_area_fraction=>0.05,
 :duct_zone=>"Basement Zone"

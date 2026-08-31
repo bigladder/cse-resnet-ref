@@ -1,5 +1,5 @@
 :case_name=>"HVAC2b",
 :climate=>"HEATING",
 :hvac_model=>"DETAILED",
-:heating_cap=>56100,
+:heating_capacity=>56100,
 :afue=>0.9

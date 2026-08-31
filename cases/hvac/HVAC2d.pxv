@@ -1,6 +1,9 @@
 :case_name=>"HVAC2d",
 :climate=>"HEATING",
 :hvac_model=>"DETAILED",
-:heating_cap=>56100,
-:hvac_type=>"ASHP",
-:hspf=>9.85
+:heating_capacity=>56100,
+:heating_capacity_17=>38700,
+:heating_type=>"HEAT_PUMP",
+:hspf2=>8.3725,
+:fan_motor_type=>"BPM",
+:compressor_speed_type=>"VARIABLE_SPEED"

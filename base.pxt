@@ -23,7 +23,6 @@
   parameter "envelope_eff", :default=>"TYPICAL" # choices: TYPICAL, LOW, HIGH
   parameter "heat_sp", :default=>68 # F
   parameter "cool_sp", :default=>78 # F
-  parameter "heat_sb", :default=>20 # C
   parameter "h_ext", :default=>nil
   parameter "h_int", :default=>nil
   parameter "framing_factor_walls", :default=>0.25 # Note 3 in Table 7.1 specifies 0.25 framing factor for exterior walls
@@ -35,20 +34,31 @@
   parameter "raised_floor_insulated", :default=>true # whether main zone floor includes cavity insulation
   parameter "raised_floor_framed", :default=>true # whether main zone floor includes wood framing
   parameter "hvac_model", :default=>"SIMPLE" # whether zones are conditioned by RSYS object "DETAILED" or imaginary znQMx members "SIMPLE"
-  parameter "hvac_type", :default=>"ACFURNACE" # heat/cool type, choices: ACFURNACE | ASHP | ACRESISTANCE
-  parameter "heating_cap", :default=>56100 # heating capacity, Btu/hr, default from HVAC2a gas furnace capacity
+  parameter "heating_type", :default=>"GAS_FURNACE" # heat/cool type, choices: GAS_FURNACE | HEAT_PUMP | ELECTRIC_FURNACE
+  parameter "duct_type", :default=>"DUCTED" # choices DUCTED | DUCTLESS
+  parameter "heating_capacity", :default=>56100 # heating capacity or heating capacity at 47°F, Btu/hr, default from HVAC2a gas furnace capacity
+  parameter "heating_capacity_17", :default=>nil # heating capacity at 17°F, Btu/hr, default from HVAC2a gas furnace capacity
+  parameter "minimum_rated_temperature", :default=>0 # Minimum operating temperature of HEAT_PUMP in degF
   parameter "afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
-  parameter "cooling_cap", :default=>38300 # cooling capacity, Btu/hr, default from HVAC1a DX capacity
-  parameter "seer", :default=>10 # DX cooling SEER
-  parameter "hspf", :default=>6.8 # Heating Seasonal Performance Factor for ASHP
-  parameter "fan_flow_per_cap", :default=>360 # Air flow rate as cfm per ton of heat/cool capacity, per Table 4.4.3(1)
+  parameter "cooling_capacity", :default=>38300 # cooling capacity, Btu/hr, default from HVAC1a DX capacity
+  parameter "seer2", :default=>nil # DX cooling SEER2; default based on compressor_speed_type, see below
+  parameter "eer2", :default=>nil # DX cooling EER2
+  parameter "hspf2", :default=>nil # Heating Seasonal Performance Factor for HEAT_PUMP; default based on compressor_speed_type, see below
+  parameter "compressor_speed_type", :default=>"SINGLE_STAGE" # Number of compressor stages, choices: SINGLE_STAGE | TWO_STAGE | VARIABLE_SPEED
+  parameter "fan_motor_type", :default=>"PSC" # Fan Motor Type for blower system 
+  parameter "operational_fan_flow_rate_per_cooling_capacity", :default=>360 # cfm per ton of cooling capacity, per Addendum 82 Section C.6.13 Indoor Fan Energy
+  parameter "operational_fan_flow_rate_per_heating_capacity", :default=>nil # cfm per ton of heating capacity, either user defined or defaults per Addendum 82 Section C.6.13 Indoor Fan Energy | default HEAT_PUMP is 360 cfm/ton | default GAS_FURNACE or ELECTRIC_FURNACE is 240 cfm/ton
   parameter "supply_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as supply duct area
   parameter "return_duct_area_fraction", :default=>0 # fraction of conditioned floor area to set as return duct area
   parameter "duct_zone", :default=>"Main Zone" # zone where supply and return ducts are located
   parameter "duct_insulation_r_value", :default=>0 # R-value of duct insulation without air film
-  parameter "duct_air_film_r_value", :default=>1.5 # R-value of exterior air film for duct (or duct insulation)
+  parameter "duct_air_film_r_value", :default=>0.667 # R-value of exterior air film for duct (or duct insulation) Defined in RESNET 301-2025 Section 4.2.2.5.1
+  parameter "duct_diameter_supply", :default=>6 # (in.) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
+  parameter "duct_diameter_return", :default=>14 # (in.) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
   parameter "duct_leakage_flow", :default=>0 # combined cfm airflow leaking out of supply + return ducts
   parameter "duct_exterior_emittance", :default=>0 # Exposed (i.e. insulation) outside surface exterior long wave (thermal) emittance
+  parameter "duct_fraction_rectangular_supply", :default=>0.25  # Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
+  parameter "duct_fraction_rectangular_return", :default=>1.00  # Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
 
 # Testing
   parameter "isolate_attic", :default=>false
@@ -80,6 +90,16 @@ end
 # Internal use
 nsteps = 6
 
+# Air Constants
+air_specific_heat = 0.24 # Btu/(lb*degF)
+air_density = 0.077 # lb/ft3
+
+# Duct Constants
+$r_air_film_external = 0.667
+$r_air_film_internal_rectangular = 0.333
+$r_air_film_internal_cse_default = 0.4 # CSE uses a default of 0.4 for the internal air film
+$duct_insulation_resistivity = 2.8 # (ft2∙°F∙h/Btu) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
+
 # weather file
 if climate == "HEATING"
   weather_file = "TMY3-Colorad-v5.0.epw"
@@ -92,6 +112,11 @@ elsif climate == "COOLING"
   heat_power = 0 # No heating, required by Section 7.2.1.14.1
   cool_power = -3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
 end
+
+# Resolve to an absolute path at compose time (cwd is the repo root here), since the
+# composed .cse file is run from a build output directory several levels below the repo
+# root -- a path relative to "weather/" would only resolve correctly if run from the root.
+weather_file_path = File.expand_path("weather/#{weather_file}")
 
 # Dimensions
 width = 57.0 # East-to-West dimension in feet
@@ -120,33 +145,179 @@ door_height = (6.00 + (8.00 / 12.00) ) # Door height [ft]
 overhang_depth = 2.5 # Depth of overhang [ft]
 overhang_height = 1.0 # Height of gap between top of window and bottom of overhang [ft]
 
+rated_fan_flow_rate_per_capacity = 400 # cfm per ton of cooling or heating capacity, per Addendum 82 Section C.6.4 Net-to-Gross Performance Conversions
+
 supply_duct_area = supply_duct_area_fraction * floor_area
 return_duct_area = return_duct_area_fraction * floor_area
 
-if seer >= 14
-  cooling_fan_power_per_flow = 0.375 # high-efficiency fan power per flow, per Table 4.4.3(1)
-else
-  cooling_fan_power_per_flow = 0.5 # standard fan power per flow, per Table 4.4.3(1)
-end
 
-if afue >= 0.9
-  heating_fan_power_per_flow = 0.375 # high-efficiency fan power per flow, per Table 4.4.3(1)
-else
-  heating_fan_power_per_flow = 0.5 # standard fan power per flow, per Table 4.4.3(1)
-end
-
-if heating_cap > 0 or cooling_cap > 0
-  fan_flow = fan_flow_per_cap * [heating_cap, cooling_cap].max / 12000 # multiplying cfm/ton by max of heating or coolig Btu/hr to get cfm  if return_duct_area > 0 and supply_duct_area > 0
-  if return_duct_area > 0 and supply_duct_area > 0
-    duct_leakage_fraction = 0.5 * duct_leakage_flow / fan_flow # half of total leakage flow assigned to supply + return ducts
-  else
-    duct_leakage_fraction = duct_leakage_flow / fan_flow # total leakage flow assigned to supply or return duct
+# Define operational_fan_flow_rate_per_heating_capacity if nil using defaults per Addendum 82 Section C.6.13 Indoor Fan Energy
+if operational_fan_flow_rate_per_heating_capacity.nil?
+  if heating_type == "HEAT_PUMP"
+    operational_fan_flow_rate_per_heating_capacity = 360
+  else # GAS_FURNACE or ELECTRIC_FURNACE
+    operational_fan_flow_rate_per_heating_capacity = 240
   end
 end
 
+# Define heating_capacity_17 if nil
+if heating_capacity_17.nil?
+  if compressor_speed_type == "VARIABLE_SPEED"
+    heating_capacity_17 = 0.689 * heating_capacity
+  else # compressor_speed_type == SINGLE_STAGE | TWO_STAGE
+    heating_capacity_17 = 0.626 * heating_capacity
+  end
+end
+
+# Define seer2 and/or hspf2 if nil, correlating one from the other where only one is given.
+# DOE's federal minimum efficiency standard (10 CFR 430.32, effective 2023) for split-system
+# heat pumps is SEER2 14.3 / HSPF2 7.5. ENERGY STAR's qualifying level (Version 6.2, Table 2:
+# HP Split Systems) is SEER2 15.2 / HSPF2 7.8. Neither varies by compressor_speed_type, but
+# the line through those two points gives a simple SEER2-vs-HSPF2 correlation to fill in
+# whichever rating a case didn't specify, consistent with the other rating it did specify.
+federal_min_seer2 = 14.3
+federal_min_hspf2 = 7.5
+energy_star_seer2 = 15.2
+energy_star_hspf2 = 7.8
+seer2_per_hspf2 = (energy_star_seer2 - federal_min_seer2) / (energy_star_hspf2 - federal_min_hspf2)
+
+if hspf2.nil? and seer2.nil?
+  # Neither given: fall back to the two anchor points directly, based on compressor_speed_type.
+  if compressor_speed_type == "VARIABLE_SPEED"
+    seer2 = energy_star_seer2
+    hspf2 = energy_star_hspf2
+  else # compressor_speed_type == SINGLE_STAGE | TWO_STAGE
+    seer2 = federal_min_seer2
+    hspf2 = federal_min_hspf2
+  end
+elsif seer2.nil?
+  seer2 = federal_min_seer2 + seer2_per_hspf2 * (hspf2 - federal_min_hspf2)
+elsif hspf2.nil?
+  hspf2 = federal_min_hspf2 + (seer2 - federal_min_seer2) / seer2_per_hspf2
+end
+
+def calculate_insulation_round_duct(diameter, r_nominal_insulation)
+  # Applies round duct insulation calculations according to RESNET/ICC 301-2025 Section 4.2.2.5.1
+    # Rround = Rint_round + Ractual + Rext * (D / (D+2T))
+  # Calculates the effective R-value of round ducts, including air films
+  # R_overall = R_air_film_internal + R_effective + R_air_film_external; where R_effective has no air films
+
+  thickness_insulation = r_nominal_insulation / $duct_insulation_resistivity # (in.) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
+
+  r_air_film_internal = 0.3429 * diameter ** 0.1974 # (ft2∙°F∙h/Btu) Defined in RESNET/ICC 301-2025 Section 4.2.2.5.1
+  if thickness_insulation > 0
+    r_effective = r_nominal_insulation / thickness_insulation * (diameter / 2) * Math.log(1 + ((2 * thickness_insulation) / diameter))
+  else
+    r_effective = 0
+  end
+
+  return r_air_film_internal + r_effective + $r_air_film_external * (diameter / (diameter + 2*thickness_insulation))
+
+end
+
+def calculate_insulation_rectangular_duct(r_nominal_insulation)
+  # Applies rectangular duct insulation calculations according to RESNET/ICC 301-2025 Section 4.2.2.5.1
+    # Rrect = Rint_rect + Rnominal + Rext
+
+  return $r_air_film_internal_rectangular + r_nominal_insulation + $r_air_film_external
+end
+
+def safe_divide(numerator, denominator)
+  if denominator == 0
+    return 0
+  else
+    return numerator / denominator
+  end
+
+end
+
+def calculate_effective_insulation_duct(r_value_rectangular_duct, r_value_round_duct, duct_fraction_rectangular)
+  # Reffective = 1 / (Frect / Rrect + Fround / Rround)
+  # CSE uses a default of 0.4 for internal air film R-value ($r_air_film_internal_cse_default), which must be removed to calculate the effective duct insulation
+  r_effective = safe_divide(1, (safe_divide(duct_fraction_rectangular, r_value_rectangular_duct) + safe_divide(1 - duct_fraction_rectangular, r_value_round_duct))) - $r_air_film_internal_cse_default - $r_air_film_external
+
+  if r_effective > 0
+    return r_effective
+  else
+    return 0
+  end
+
+end
+
+# The rectangular formula has no diameter term, so it doesn't vary by supply/return like the round one does.
+r_value_rectangular_duct = calculate_insulation_rectangular_duct(duct_insulation_r_value)
+
+r_value_round_duct_supply = calculate_insulation_round_duct(duct_diameter_supply, duct_insulation_r_value)
+r_value_round_duct_return = calculate_insulation_round_duct(duct_diameter_return, duct_insulation_r_value)
+
+r_value_duct_supply = calculate_effective_insulation_duct(r_value_rectangular_duct, r_value_round_duct_supply, duct_fraction_rectangular_supply)
+r_value_duct_return = calculate_effective_insulation_duct(r_value_rectangular_duct, r_value_round_duct_return, duct_fraction_rectangular_return)
+
+
+# Define eer2 if nil
+if eer2.nil?
+  if seer2 < 13.0 
+    eer2 = 10.0 + 0.84 * (seer2 - 11.5)
+  else # seer2 >= 13.0
+    eer2 = 11.3 + 0.57 * (seer2 - 13.0)
+  end
+end
+
+
+def calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, flow_ratio)
+  # Equations are defined in Addendum 8.2 Section C.6.13 Indoor Fan Energy. 
+  # Equations in aforementioned section are defined as P_fan_op_mode_i = ...; equations below are manipulated to set P_fan_op_mode_i / V_op_mode_i = ...
+  # Values 0.414, 0.281, and 0.171 are rated specific fan power constants defined in Addendum 82 Section C.6.4 Net-to-Gross Performance Conversions
+  if fan_motor_type == "PSC"
+    return 0.414 * (0.3 * flow_ratio + 0.7) 
+  else # fan_motor_type == "BPM"
+    if duct_type == "DUCTED"
+      return 0.281 * (flow_ratio) ** 1.75
+    else # duct_type == "DUCTLESS"
+      return 0.171 * (flow_ratio) ** 2.00
+    end
+  end
+end
+
+
+cooling_mode_specific_fan_power = calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_cooling_capacity)
+heating_mode_specific_fan_power = calculate_fan_flow_rate_per_capacity(fan_motor_type, duct_type, rated_fan_flow_rate_per_capacity / operational_fan_flow_rate_per_heating_capacity)
+
+
+# cycling degradation coefficients are listed in Addendum 82 Section C.6.12 Operating Performance
+if compressor_speed_type == "VARIABLE_SPEED"
+  cycling_degradation = 0.40
+else # compressor_speed_type = SINGLE_STAGE | TWO_STAGE
+  cycling_degradation = 0.08
+end
+
+
+def get_fan_flow(capacity, fan_flow_rate_per_capacity)
+  return fan_flow_rate_per_capacity * capacity / 12000 # multiplying cfm/ton by heating or cooling capacity Btu/hr to get cfm
+end
+
+if climate == "HEATING" and heating_capacity > 0
+  fan_flow = get_fan_flow(heating_capacity, operational_fan_flow_rate_per_heating_capacity)
+elsif climate == "COOLING" and cooling_capacity > 0
+  fan_flow = get_fan_flow(cooling_capacity, operational_fan_flow_rate_per_cooling_capacity)
+end
+
+if return_duct_area > 0 and supply_duct_area > 0
+  duct_leakage_fraction = 0.5 * duct_leakage_flow / fan_flow # half of total leakage flow assigned to supply + return ducts
+else
+  duct_leakage_fraction = duct_leakage_flow / fan_flow # total leakage flow assigned to supply or return duct
+end
+
+if heating_type == "GAS_FURNACE"
+  rs_type = "ACPMFURNACE"
+elsif heating_type == "HEAT_PUMP"
+  rs_type = "ASHPPM"
+elsif heating_type == "ELECTRIC_FURNACE"
+  rs_type = "ACPMRESISTANCE"
+end
 %>
 
-wfName = "weather//<%= weather_file %>"
+wfName = "<%= weather_file_path %>"
 elevation = <%= elevation %>
 nSubSteps = <%= nsteps %>
 DT = No
@@ -628,23 +799,44 @@ window_area = 0.0
 <% end %>
 
 <% if hvac_model == "DETAILED" %>
+
+  <%
+
+  cli_command = "uv run python functions/get_air_source_heat_pump_performance_map.py #{compressor_speed_type} #{cooling_capacity} #{heating_capacity} #{heating_capacity_17} #{minimum_rated_temperature} #{seer2} #{eer2} #{hspf2} #{fan_motor_type} #{duct_type}"
+
+  run_command = `#{cli_command}`
+
+  performance_map = run_command.strip
+
+  %>
+
+  <%= performance_map %>
+
+
 // Main Zone HVAC System
   RSYS "Main Zone HVAC System"
-    rsType = <%= hvac_type %>
+    rsType = <%= rs_type %>
     rsElecMtr = "Elec Meter"
     rsFuelMtr = "Gas Meter"
-    rsFanPwrC = <%= cooling_fan_power_per_flow %>
-    rsCapC = <%= cooling_cap %>
-    rsSEER = <%= seer %>
-    rsFanPwrH = <%= heating_fan_power_per_flow %>
-  <% if hvac_type == "ACFURNACE" or hvac_type == "ACRESISTANCE" %>
+    rsFanPwrC = <%= cooling_mode_specific_fan_power %>
+    rsCapC = <%= cooling_capacity %>
+    rsSEER = <%= seer2 / 0.95 %>
+    rsFanPwrH = <%= heating_mode_specific_fan_power %>
+    rsFanMotTy = <%= fan_motor_type %>
+    rsTdDesH = <%= 1 / (operational_fan_flow_rate_per_heating_capacity * air_specific_heat * air_density) * 12000.0 / 60.0 %> // Unit conversion of 12000 / 60 converts min*ton to Btu (conversion 1 - 12000 Btu / hr*ton) (conversion 2 - 1 hr / 60 min) 
+    rsCdC = <%= cycling_degradation %>
+  <% if heating_type == "GAS_FURNACE" or heating_type == "ELECTRIC_FURNACE"%>
     rsAFUE = <%= afue %>
-    rsCapH = <%= heating_cap %>
-  <% elsif hvac_type == "ASHP" %>
-    rsHSPF = <%= hspf %>
-    rsCap47 = <%= heating_cap %>
+    rsCapH = <%= heating_capacity %>
+    rsPerfMapClg = "RSYS Cooling Performance Map"
+  <% elsif heating_type == "HEAT_PUMP" %>
+    rsCdH = <%= cycling_degradation %>
+    rsCap47 = <%= heating_capacity %>
+    rsHSPF = <%= hspf2 / 0.85 %>
+    rsPerfMapHtg = "RSYS Heating Performance Map"
+    rsPerfMapClg = "RSYS Cooling Performance Map"
   <% end %>
-    rsVFPerTon = <%= fan_flow_per_cap %>
+    rsVFPerTon = <%= operational_fan_flow_rate_per_cooling_capacity %>
 
   <% if supply_duct_area > 0 %>
   // Main Zone Supply Duct
@@ -653,8 +845,8 @@ window_area = 0.0
       dsExArea = <%= supply_duct_area %>
       dsExCnd = ADJZN
       dsAdjZn = "<%= duct_zone %>"
-      dsInsulR = <%= duct_insulation_r_value %>
-      dsExH = <%= 1 / duct_air_film_r_value %>
+      dsInsulR = <%= r_value_duct_supply %>
+      dsExH = <%= 1 / $r_air_film_external %>
       dsLeakF = <%= duct_leakage_fraction %>
       dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
@@ -666,8 +858,8 @@ window_area = 0.0
       dsExArea = <%= return_duct_area %>
       dsExCnd = ADJZN
       dsAdjZn = "<%= duct_zone %>"
-      dsInsulR = <%= duct_insulation_r_value %>
-      dsExH = <%= 1 / duct_air_film_r_value %>
+      dsInsulR = <%= r_value_duct_return %>
+      dsExH = <%= 1 / $r_air_film_external %>
       dsLeakF = <%= duct_leakage_fraction %>
       dsEpsLW = <%= duct_exterior_emittance %>
   <% end %>
@@ -678,7 +870,7 @@ ZONE "Attic Zone"
   znModel = UZX
   znArea = <%= floor_area %>
   znVol = <%= zone_vol_attic %>
-  znCAir = <%= 0.24*0.077*zone_vol_attic %>
+  znCAir = <%= air_specific_heat * air_density * zone_vol_attic %>
   infAC = <%= ach_attic %>
   znEaveZ = <%= height_cond %>
 <%
@@ -878,7 +1070,7 @@ EXPORT
   DELETE EXPORTFILE Primary
 
 EXPORTFILE "Results"
-  xfFileName = "..\\Results.csv"
+  xfFileName = "../Results.csv"
   xfFileStat = APPEND
 
 EXPORT

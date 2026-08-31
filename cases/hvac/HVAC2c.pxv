@@ -1,5 +1,5 @@
 :case_name=>"HVAC2c",
 :climate=>"HEATING",
 :hvac_model=>"DETAILED",
-:heating_cap=>56100,
-:hvac_type=>"ASHP"
+:heating_capacity=>56100,
+:heating_type=>"HEAT_PUMP"
