@@ -33,9 +33,9 @@ def get_performance_map(
 
     minimum_rated_temperature = fr_u(float(minimum_rated_temperature_degF), "degF")
 
-    seer2: float = float(seer2)  # type: ignore
-    eer2: float = float(eer2)  # type: ignore
-    hspf2: float = float(hspf2)  # type: ignore
+    seer2_value = float(seer2)
+    eer2_value = float(eer2)
+    hspf2_value = float(hspf2)
 
     motor_type = FanMotorType[motor_type]
 
@@ -50,9 +50,9 @@ def get_performance_map(
         rated_net_heating_capacity=heating_capacity_47,
         rated_net_heating_capacity_17=heating_capacity_17,
         heating_off_temperature=minimum_rated_temperature,
-        input_seer=seer2,
-        input_eer=eer2,
-        input_hspf=hspf2,
+        input_seer=seer2_value,
+        input_eer=eer2_value,
+        input_hspf=hspf2_value,
         motor_type=motor_type,
         is_ducted=is_ducted,
     )
