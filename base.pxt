@@ -115,6 +115,11 @@ elsif climate == "COOLING"
   cool_power = -3413000 # 3.413 million Btu/hr, required by Section 7.2.1.15
 end
 
+# Resolve to an absolute path at compose time (cwd is the repo root here), since the
+# composed .cse file is run from a build output directory several levels below the repo
+# root -- a path relative to "weather/" would only resolve correctly if run from the root.
+weather_file_path = File.expand_path("weather/#{weather_file}")
+
 # Dimensions
 width = 57.0 # East-to-West dimension in feet
 depth = 27.0 # North-to-South dimension in feet
@@ -314,7 +319,7 @@ elsif heating_type == "ELECTRIC_FURNACE"
 end
 %>
 
-wfName = "weather//<%= weather_file %>"
+wfName = "<%= weather_file_path %>"
 elevation = <%= elevation %>
 nSubSteps = <%= nsteps %>
 DT = No
