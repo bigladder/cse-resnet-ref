@@ -41,9 +41,9 @@
   parameter "minimum_rated_temperature", :default=>0 # Minimum operating temperature of HEAT_PUMP in degF
   parameter "afue", :default=>0.78 # heating efficiency for gas furnace and electric resistance
   parameter "cooling_capacity", :default=>38300 # cooling capacity, Btu/hr, default from HVAC1a DX capacity
-  parameter "seer2", :default=>9.50 # DX cooling SEER2
+  parameter "seer2", :default=>nil # DX cooling SEER2; default based on compressor_speed_type, see below
   parameter "eer2", :default=>nil # DX cooling EER2
-  parameter "hspf2", :default=>5.78 # Heating Seasonal Performance Factor for HEAT_PUMP
+  parameter "hspf2", :default=>nil # Heating Seasonal Performance Factor for HEAT_PUMP; default based on compressor_speed_type, see below
   parameter "compressor_speed_type", :default=>"SINGLE_STAGE" # Number of compressor stages, choices: SINGLE_STAGE | TWO_STAGE | VARIABLE_SPEED
   parameter "fan_motor_type", :default=>"PSC" # Fan Motor Type for blower system 
   parameter "operational_fan_flow_rate_per_cooling_capacity", :default=>360 # cfm per ton of cooling capacity, per Addendum 82 Section C.6.13 Indoor Fan Energy
@@ -164,6 +164,33 @@ if heating_capacity_17.nil?
   else # compressor_speed_type == SINGLE_STAGE | TWO_STAGE
     heating_capacity_17 = 0.626 * heating_capacity
   end
+end
+
+# Define seer2 and/or hspf2 if nil, correlating one from the other where only one is given.
+# DOE's federal minimum efficiency standard (10 CFR 430.32, effective 2023) for split-system
+# heat pumps is SEER2 14.3 / HSPF2 7.5. ENERGY STAR's qualifying level (Version 6.2, Table 2:
+# HP Split Systems) is SEER2 15.2 / HSPF2 7.8. Neither varies by compressor_speed_type, but
+# the line through those two points gives a simple SEER2-vs-HSPF2 correlation to fill in
+# whichever rating a case didn't specify, consistent with the other rating it did specify.
+federal_min_seer2 = 14.3
+federal_min_hspf2 = 7.5
+energy_star_seer2 = 15.2
+energy_star_hspf2 = 7.8
+seer2_per_hspf2 = (energy_star_seer2 - federal_min_seer2) / (energy_star_hspf2 - federal_min_hspf2)
+
+if hspf2.nil? and seer2.nil?
+  # Neither given: fall back to the two anchor points directly, based on compressor_speed_type.
+  if compressor_speed_type == "VARIABLE_SPEED"
+    seer2 = energy_star_seer2
+    hspf2 = energy_star_hspf2
+  else # compressor_speed_type == SINGLE_STAGE | TWO_STAGE
+    seer2 = federal_min_seer2
+    hspf2 = federal_min_hspf2
+  end
+elsif seer2.nil?
+  seer2 = federal_min_seer2 + seer2_per_hspf2 * (hspf2 - federal_min_hspf2)
+elsif hspf2.nil?
+  hspf2 = federal_min_hspf2 + (seer2 - federal_min_seer2) / seer2_per_hspf2
 end
 
 def calculate_insulation_round_duct(diameter, r_nominal_insulation)
