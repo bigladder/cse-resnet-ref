@@ -1072,7 +1072,7 @@ EXPORT
   DELETE EXPORTFILE Primary
 
 EXPORTFILE "Results"
-  xfFileName = "..\\Results.csv"
+  xfFileName = "../Results.csv"
   xfFileStat = APPEND
 
 EXPORT
